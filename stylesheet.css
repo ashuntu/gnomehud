@@ -1,1 +1,5 @@
 /* Add your custom extension styling here */
+.test
+{
+    background-color: rgba(0, 0, 0, 0.25);
+}

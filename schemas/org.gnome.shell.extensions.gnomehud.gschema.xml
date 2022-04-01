@@ -2,14 +2,18 @@
 <schemalist>
     <schema id="org.gnome.shell.extensions.gnomehud" path="/org/gnome/shell/extensions/gnomehud/">
         <!-- See also: https://docs.gtk.org/glib/gvariant-format-strings.html -->
+        <!-- SETTINGS -->
         <key name="show-indicator" type="b">
             <default>true</default>
         </key>
+        <key name="show-overlay" type="b">
+            <default>true</default>
+        </key>
         <!-- KEYBINDS -->
-        <!-- <key name="toggle-overlay" type="as">
-            <default>["&lt;Alt&gt;&lt;Super&gt;g"]</default>
+        <key name="kb-toggle-overlay" type="as">
+            <default>["&lt;Super&gt;&lt;Alt&gt;g"]</default>
             <summary>toggle the overlay</summary>
             <description>toggle the overlay</description>
-        </key> -->
+        </key>
     </schema>
 </schemalist>
