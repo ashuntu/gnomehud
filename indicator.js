@@ -51,7 +51,10 @@ var indicator = class Indicator extends GObject.Object
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Overlay switch
-        let switchItem = new PopupMenu.PopupSwitchMenuItem("Overlay", true);
+        let switchItem = new PopupMenu.PopupSwitchMenuItem(
+            "Overlay", 
+            this._extension.settings.get_boolean("show-overlay"),
+        );
         switchItem.connect("toggled", this._extension.overlay.toggle.bind(this._extension.overlay));
         this._button.menu.addMenuItem(switchItem);
 
