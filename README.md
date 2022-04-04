@@ -37,3 +37,9 @@ journalctl -f -o cat /usr/bin/gnome-shell
 ```
 gnome-extensions pack gnomehud@ashtonn.com --extra-source={indicator.js,overlay.js}
 ```
+
+### Compile (Preferences) Schemas
+
+```
+glib-compile-schemas schemas/
+```
