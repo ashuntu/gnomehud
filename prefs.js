@@ -21,6 +21,7 @@ function fillPreferencesWindow(window)
     const row = new Adw.ActionRow({ title: "Show Extension Indicator" });
     group.add(row);
 
+    // show-indicator
     const toggle = new Gtk.Switch({
         active: settings.get_boolean("show-indicator"),
         valign: Gtk.Align.CENTER,
@@ -32,6 +33,12 @@ function fillPreferencesWindow(window)
         "active",
         Gio.SettingsBindFlags.DEFAULT,
     );
+
+    // show-overlay
+    const overlayToggle = new Gtk.Switch({
+        active: settings.get_boolean("show-overlay"),
+        valign: Gtk.Align.CENTER,
+    });
 
     row.add_suffix(toggle);
     row.activatable_widget = toggle;

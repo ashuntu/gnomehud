@@ -34,6 +34,13 @@ var indicator = class Indicator extends GObject.Object
         });
         this._button.add_child(icon);
 
+        this._extension.settings.bind(
+            "show-indicator",
+            this._button,
+            "visible",
+            Gio.SettingsBindFlags.DEFAULT,
+        );
+
         Main.panel.addToStatusArea(Me.metadata.uuid, this._button);
 
         // Title
@@ -44,10 +51,18 @@ var indicator = class Indicator extends GObject.Object
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Overlay switch
-        let switchItem = new PopupMenu.PopupSwitchMenuItem("Overlay", false);
-        switchItem.connect("toggled", this._extension.overlay.toggle);
+        let switchItem = new PopupMenu.PopupSwitchMenuItem("Overlay", true);
+        switchItem.connect("toggled", this._extension.overlay.toggle.bind(this._extension.overlay));
         this._button.menu.addMenuItem(switchItem);
-        this.overlayToggled = false;
+        this.overlayToggled = true;
+
+        // Dev note: is there a better way to do this other than referencing _switch?
+        this._extension.settings.bind(
+            "show-overlay",
+            switchItem._switch,
+            "state",
+            Gio.SettingsBindFlags.DEFAULT,
+        );
 
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
@@ -71,7 +86,6 @@ var indicator = class Indicator extends GObject.Object
     disableButtonActivate()
     {
         log(`${Me.metadata.uuid}: User disabling extension`);
-
         ExtensionManager.disableExtension(Me.metadata.uuid)
     }
 

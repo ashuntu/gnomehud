@@ -40,6 +40,8 @@ var overlay = class Overlay extends GObject.Object
     {
         log(`${Me.metadata.uuid}: Overlay toggled`);
 
+        this._extension.settings.set_boolean("show-overlay", !this.toggled);
+
         let icon = new Gio.ThemedIcon({ name: "face-laugh-symbolic" });
         Main.osdWindowManager.show(0, icon , "Overlay toggled\n\nUse Super+Alt+G to toggle", null);
 
@@ -53,20 +55,18 @@ var overlay = class Overlay extends GObject.Object
         // Show the overlay
         else
         {
-            this.overlay = new St.BoxLayout({name: "GNOME HUD"});
+            this.overlay = new St.BoxLayout();
             let monitor = Main.layoutManager.monitors[0];
             let label = new St.Label();
             label.set_text("Hello");
             let icon = new St.Icon({
                 gicon: new Gio.ThemedIcon({name: "face-laugh-symbolic"})
             });
-            icon.sensitive = false;
             this.overlay.add_style_class_name("test");
             this.overlay.add_child(label);
             this.overlay.add_child(icon);
             this.overlay.set_position(monitor.width - 250, 100);
             this.overlay.set_size(200, 200);
-            this.overlay.sensitive = false;
             Main.layoutManager.addChrome(this.overlay, null);
 
             this.toggled = true;
