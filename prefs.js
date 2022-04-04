@@ -18,30 +18,44 @@ function fillPreferencesWindow(window)
     const group = new Adw.PreferencesGroup();
     page.add(group);
 
-    const row = new Adw.ActionRow({ title: "Show Extension Indicator" });
-    group.add(row);
-
     // show-indicator
-    const toggle = new Gtk.Switch({
+    const indicatorRow = new Adw.ActionRow({ title: "Show Extension Indicator" });
+    group.add(indicatorRow);
+
+    const indicatorToggle = new Gtk.Switch({
         active: settings.get_boolean("show-indicator"),
         valign: Gtk.Align.CENTER,
     });
 
     settings.bind(
         "show-indicator",
-        toggle,
+        indicatorToggle,
         "active",
         Gio.SettingsBindFlags.DEFAULT,
     );
 
+    indicatorRow.add_suffix(indicatorToggle);
+    indicatorRow.activatable_widget = indicatorToggle;
+
     // show-overlay
+    const overlayRow = new Adw.ActionRow({ title: "Show Overlay" });
+    group.add(overlayRow);
+
     const overlayToggle = new Gtk.Switch({
         active: settings.get_boolean("show-overlay"),
         valign: Gtk.Align.CENTER,
     });
 
-    row.add_suffix(toggle);
-    row.activatable_widget = toggle;
+    // TODO: properly bind toggle to overlay display
+    settings.bind(
+        "show-overlay",
+        overlayToggle,
+        "active",
+        Gio.SettingsBindFlags.DEFAULT,
+    );
+
+    overlayRow.add_suffix(overlayToggle);
+    overlayRow.activatable_widget = overlayToggle;
 
     window.add(page);
 }
