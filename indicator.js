@@ -10,6 +10,11 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
+const ngettext = Domain.ngettext;
+
 var indicator = class Indicator extends GObject.Object
 {
     static
@@ -52,7 +57,7 @@ var indicator = class Indicator extends GObject.Object
 
         // Overlay switch
         let switchItem = new PopupMenu.PopupSwitchMenuItem(
-            "Overlay", 
+            _("Overlay"), 
             false,
         );
         switchItem.connect("toggled", this._extension.overlay.toggle.bind(this._extension.overlay));
@@ -69,25 +74,25 @@ var indicator = class Indicator extends GObject.Object
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Settings button
-        let settingsItem = new PopupMenu.PopupMenuItem("Settings");
+        let settingsItem = new PopupMenu.PopupMenuItem(_("Settings"));
         settingsItem.connect("activate", this.settingsButtonActivate.bind(this));
         this._button.menu.addMenuItem(settingsItem);
 
         // Quit button
-        let disableItem = new PopupMenu.PopupMenuItem("Disable");
+        let disableItem = new PopupMenu.PopupMenuItem(_("Disable"));
         disableItem.connect("activate", this.disableButtonActivate.bind(this));
         this._button.menu.addMenuItem(disableItem);
     }
 
     settingsButtonActivate()
     {
-        log(`${Me.metadata.uuid}: Opening settings dialog`);
+        log(_(`${Me.metadata.uuid}: Opening settings dialog`));
         ExtensionManager.openExtensionPrefs(Me.metadata.uuid, "", null);
     }
 
     disableButtonActivate()
     {
-        log(`${Me.metadata.uuid}: User disabling extension`);
+        log(_(`${Me.metadata.uuid}: User disabling extension`));
         ExtensionManager.disableExtension(Me.metadata.uuid)
     }
 

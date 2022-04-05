@@ -10,6 +10,11 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
+const ngettext = Domain.ngettext;
+
 var overlay = class Overlay extends GObject.Object
 {
     static
@@ -52,7 +57,7 @@ var overlay = class Overlay extends GObject.Object
 
     toggle()
     {
-        log(`${Me.metadata.uuid}: Overlay toggled`);
+        log(_(`${Me.metadata.uuid}: Overlay toggled`));
 
         this._extension.settings.set_boolean(
             "show-overlay", 
@@ -60,7 +65,7 @@ var overlay = class Overlay extends GObject.Object
         );
         
         let icon = new Gio.ThemedIcon({ name: "face-laugh-symbolic" });
-        Main.osdWindowManager.show(0, icon , "Overlay toggled\n\nUse Super+Alt+G to toggle", null);
+        Main.osdWindowManager.show(0, icon , _("Overlay toggled\n\nUse Super+Alt+G to toggle"), null);
 
         // Hide the overlay
         if (!this._extension.settings.get_boolean("show-overlay"))
@@ -80,11 +85,11 @@ var overlay = class Overlay extends GObject.Object
             let monitor = Main.layoutManager.monitors[0];
 
             this.ramLabel = new St.Label();
-            this.ramLabel.set_text(`RAM 0%`);
+            this.ramLabel.set_text(_("RAM 0.00%"));
             this.overlay.add_child(this.ramLabel);
 
             this.cpuLabel = new St.Label();
-            this.cpuLabel.set_text(`CPU 0%`);
+            this.cpuLabel.set_text(_("CPU 0.00%"));
             this.cpuLabel.set_position(0, 50);
             this.overlay.add_child(this.cpuLabel);
 
@@ -110,7 +115,7 @@ var overlay = class Overlay extends GObject.Object
         this.ram.total = dataRAM[0];
         this.ram.used = dataRAM[1];
 
-        this.ramLabel.set_text(`RAM ${((this.ram.used / this.ram.total) * 100).toFixed(2)}%`);
+        this.ramLabel.set_text(_(`RAM ${((this.ram.used / this.ram.total) * 100).toFixed(2)}%`));
 
         // CPU
         let stdoutCPU = String(GLib.spawn_command_line_sync("head -n1 /proc/stat")[1]);
@@ -128,7 +133,7 @@ var overlay = class Overlay extends GObject.Object
         let cpuDelta = this.cpu.total - this.cpu.oldTotal;
         let cpuUsed = this.cpu.used - this.cpu.oldUsed;
 
-        this.cpuLabel.set_text(`CPU ${((cpuUsed / cpuDelta) * 100).toFixed(2)}%`)
+        this.cpuLabel.set_text(_(`CPU ${((cpuUsed / cpuDelta) * 100).toFixed(2)}%`));
 
         return true;
     }

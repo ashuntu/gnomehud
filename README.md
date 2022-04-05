@@ -35,7 +35,7 @@ journalctl -f -o cat /usr/bin/gnome-shell
 ### Pack Extension
 
 ```
-gnome-extensions pack gnomehud@ashtonn.com --extra-source={indicator.js,overlay.js}
+gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={indicator.js,overlay.js}
 ```
 
 ### Compile (Preferences) Schemas

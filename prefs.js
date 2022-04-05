@@ -5,6 +5,11 @@ const { Adw, Gio, Gtk } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const Gettext = imports.gettext;
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
+const ngettext = Domain.ngettext;
+
 function init()
 {
 
@@ -19,7 +24,7 @@ function fillPreferencesWindow(window)
     page.add(group);
 
     // show-indicator
-    const indicatorRow = new Adw.ActionRow({ title: "Show Extension Indicator" });
+    const indicatorRow = new Adw.ActionRow({ title: _("Show Extension Indicator") });
     group.add(indicatorRow);
 
     const indicatorToggle = new Gtk.Switch({
@@ -38,7 +43,7 @@ function fillPreferencesWindow(window)
     indicatorRow.activatable_widget = indicatorToggle;
 
     // show-overlay
-    const overlayRow = new Adw.ActionRow({ title: "Show Overlay" });
+    const overlayRow = new Adw.ActionRow({ title: _("Show Overlay") });
     group.add(overlayRow);
 
     const overlayToggle = new Gtk.Switch({
