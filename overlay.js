@@ -5,8 +5,6 @@ const { Clutter, St, GObject, Gio, GLib, Shell, Meta } = imports.gi;
 const Mainloop = imports.mainloop;
 
 const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
