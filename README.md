@@ -43,3 +43,9 @@ gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={indicator.
 ```
 glib-compile-schemas schemas/
 ```
+
+### Generate Translations
+
+```
+xgettext --from-code=UTF-8 --output=po/example.pot *.js
+```
