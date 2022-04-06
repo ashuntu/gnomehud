@@ -9,6 +9,9 @@
         <key name="show-overlay" type="b">
             <default>true</default>
         </key>
+        <key name="update-delay" type="i">
+            <default>1000</default>
+        </key>
         <!-- KEYBINDS -->
         <key name="kb-toggle-overlay" type="as">
             <default>["&lt;Super&gt;&lt;Alt&gt;g"]</default>
