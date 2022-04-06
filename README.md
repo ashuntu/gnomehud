@@ -22,9 +22,25 @@ GNOME Shell extension for displaying system information like CPU usage, RAM usag
 
 *If the extension does not appear, make sure you have user extensions enabled with `gsettings set org.gnome.shell disable-user-extensions false`*
 
+## Usage
+
+Use `Super` + `Alt` + `G` to toggle the overlay.
+
 ## Settings & Configuration
 
 Extension settings can be accessed through the indicator in the status area with the 'Settings' button. Alternatively, open the settings dialog manually with `gnome-extensions prefs gnomehud@ashtonn.com`.
+
+<details>
+    <summary>Default Configuration</summary>
+
+| Setting | Default | Type | Description |
+|---------|---------|------|-------------|
+| show-indicator | true | boolean | Show the top-panel indicator button |
+| show-overlay | false | boolean | Show the HUD overlay |
+| update-delay | 1000 | integer | Delay in milliseconds between overlay updates |
+| **Keybinds** |
+| kb-toggle-overlay | Super + Alt + G | keybind | Toggles overlay display (bound to show-overlay setting) |
+</details>
 
 ## Development
 
