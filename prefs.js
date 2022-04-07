@@ -20,7 +20,7 @@ function fillPreferencesWindow(window)
     const settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
 
     const page = new Adw.PreferencesPage();
-    const group = new Adw.PreferencesGroup();
+    const group = new Adw.PreferencesGroup({ title: _("Settings") });
     page.add(group);
 
     // show-indicator
@@ -60,6 +60,24 @@ function fillPreferencesWindow(window)
 
     overlayRow.add_suffix(overlayToggle);
     overlayRow.activatable_widget = overlayToggle;
+
+    // update-delay
+    const delayRow = new Adw.ActionRow({ title: _("Update Delay (ms)") });
+    group.add(delayRow);
+
+    const delayRange = Gtk.SpinButton.new_with_range(
+        250, 5000, 250
+    );
+
+    settings.bind(
+        "update-delay",
+        delayRange,
+        "value",
+        Gio.SettingsBindFlags.DEFAULT,
+    );
+
+    delayRow.add_suffix(delayRange);
+    delayRow.activatable_widget = delayRange;
 
     window.add(page);
 }
