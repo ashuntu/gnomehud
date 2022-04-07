@@ -51,7 +51,6 @@ function fillPreferencesWindow(window)
         valign: Gtk.Align.CENTER,
     });
 
-    // TODO: properly bind toggle to overlay display
     settings.bind(
         "show-overlay",
         overlayToggle,
