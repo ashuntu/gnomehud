@@ -27,6 +27,7 @@ var overlay = class Overlay extends GObject.Object
         super();
 
         this._extension = extension;
+        this._settings = extension.settings;
 
         this.ram = {
             total: 0,
@@ -48,60 +49,67 @@ var overlay = class Overlay extends GObject.Object
     {
         Main.wm.addKeybinding(
             "kb-toggle-overlay",
-            this._extension.settings,
+            this._settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.ALL,
-            this.toggle.bind(this),
+            () => this.toggleOverlay(),
         );
+
+        this._settings.connect("changed::show-overlay", () => this.toggle());
+    }
+
+    toggleOverlay()
+    {
+        this._settings.set_boolean("show-overlay", !this._settings.get_boolean("show-overlay"));
     }
 
     toggle()
     {
         log(_(`${Me.metadata.uuid}: Overlay toggled`));
 
-        this._extension.settings.set_boolean(
-            "show-overlay", 
-            !this._extension.settings.get_boolean("show-overlay"),
-        );
-        
         let icon = new Gio.ThemedIcon({ name: "face-laugh-symbolic" });
         Main.osdWindowManager.show(0, icon , _("Overlay toggled\n\nUse Super+Alt+G to toggle"), null);
 
+        // Show the overlay
+        if (this._settings.get_boolean("show-overlay"))
+        {
+            this.overlay = new St.Widget();
+            let monitor = Main.layoutManager.currentMonitor;
+
+            this.ramLabel = new St.Label();
+            this.ramLabel.set_text(_("RAM 0.00%"));
+            this.ramLabel.set_position(25, 25);
+            this.overlay.add_child(this.ramLabel);
+
+            this.cpuLabel = new St.Label();
+            this.cpuLabel.set_text(_("CPU 0.00%"));
+            this.cpuLabel.set_position(25, 75);
+            this.overlay.add_child(this.cpuLabel);
+
+            this.overlay.add_style_class_name("test");
+            
+            this.overlay.set_position(monitor.width - 300, 100);
+            this.overlay.set_size(250, 250);
+            Main.layoutManager.addTopChrome(this.overlay, null);
+
+            if (!this._eventLoop)
+            {
+                this._eventLoop = Mainloop.timeout_add(
+                    this._settings.get_int("update-delay"), 
+                    this.update.bind(this),
+                );
+            }
+        }
         // Hide the overlay
-        if (!this._extension.settings.get_boolean("show-overlay"))
+        else
         {
             if (this.overlay) this.overlay.destroy();
+            this.overlay = null;
 
             if (this._eventLoop)
             {
                 Mainloop.source_remove(this._eventLoop);
                 this._eventLoop = null;
-            }
-        }
-        // Show the overlay
-        else
-        {
-            this.overlay = new St.Widget();
-            let monitor = Main.layoutManager.monitors[0];
-
-            this.ramLabel = new St.Label();
-            this.ramLabel.set_text(_("RAM 0.00%"));
-            this.overlay.add_child(this.ramLabel);
-
-            this.cpuLabel = new St.Label();
-            this.cpuLabel.set_text(_("CPU 0.00%"));
-            this.cpuLabel.set_position(0, 50);
-            this.overlay.add_child(this.cpuLabel);
-
-            this.overlay.add_style_class_name("test");
-            
-            this.overlay.set_position(monitor.width - 250, 100);
-            this.overlay.set_size(200, 200);
-            Main.layoutManager.addChrome(this.overlay, null);
-
-            if (!this._eventLoop)
-            {
-                this._eventLoop = Mainloop.timeout_add(1000, this.update.bind(this));
             }
         }
     }

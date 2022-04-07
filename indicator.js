@@ -27,6 +27,7 @@ var indicator = class Indicator extends GObject.Object
         super();
 
         this._extension = extension;
+        this._settings = extension.settings;
     }
 
     create()
@@ -39,7 +40,7 @@ var indicator = class Indicator extends GObject.Object
         });
         this._button.add_child(icon);
 
-        this._extension.settings.bind(
+        this._settings.bind(
             "show-indicator",
             this._button,
             "visible",
@@ -58,13 +59,13 @@ var indicator = class Indicator extends GObject.Object
         // Overlay switch
         let switchItem = new PopupMenu.PopupSwitchMenuItem(
             _("Overlay"), 
-            false,
+            this._settings.get_boolean("show-overlay"),
         );
-        switchItem.connect("toggled", this._extension.overlay.toggle.bind(this._extension.overlay));
+        switchItem.connect("toggled", () => this.toggleOverlay());
         this._button.menu.addMenuItem(switchItem);
 
         // Dev note: is there a better way to do this other than referencing _switch?
-        this._extension.settings.bind(
+        this._settings.bind(
             "show-overlay",
             switchItem._switch,
             "state",
@@ -82,6 +83,11 @@ var indicator = class Indicator extends GObject.Object
         let disableItem = new PopupMenu.PopupMenuItem(_("Disable"));
         disableItem.connect("activate", this.disableButtonActivate.bind(this));
         this._button.menu.addMenuItem(disableItem);
+    }
+
+    toggleOverlay()
+    {
+        this._settings.set_boolean("show-overlay", this._settings.get_boolean("show-overlay"));
     }
 
     settingsButtonActivate()
