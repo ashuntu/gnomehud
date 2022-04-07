@@ -96,7 +96,7 @@ var overlay = class Overlay extends GObject.Object
             {
                 this._eventLoop = Mainloop.timeout_add(
                     this._settings.get_int("update-delay"), 
-                    this.update.bind(this),
+                    () => this.update(),
                 );
             }
         }
