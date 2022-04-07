@@ -56,6 +56,7 @@ var overlay = class Overlay extends GObject.Object
         );
 
         this._settings.connect("changed::show-overlay", () => this.toggle());
+        this._settings.connect("changed::update-delay", () => this.delayChanged());
     }
 
     toggleOverlay()
@@ -144,6 +145,20 @@ var overlay = class Overlay extends GObject.Object
         this.cpuLabel.set_text(_(`CPU ${((cpuUsed / cpuDelta) * 100).toFixed(2)}%`));
 
         return true;
+    }
+
+    delayChanged()
+    {
+        if (this._eventLoop && this._settings.get_boolean("show-overlay"))
+        {
+            Mainloop.source_remove(this._eventLoop);
+            this._eventLoop = null;
+        }
+
+        this._eventLoop = Mainloop.timeout_add(
+            this._settings.get_int("update-delay"), 
+            () => this.update(),
+        );
     }
 
     destroy()
