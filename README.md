@@ -37,9 +37,13 @@ Extension settings can be accessed through the indicator in the status area with
 |---------|---------|------|-------------|
 | show-indicator | true | boolean | Show the top-panel indicator button |
 | show-overlay | false | boolean | Show the HUD overlay |
-| update-delay | 1000 | integer | Delay in milliseconds between overlay updates |
+| update-delay | 1000 | integer | Delay in milliseconds between overlay updates, 250-5000 |
+| anchor-corner | 1 | integer | Corner of the monitor to anchor the overlay to. 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right |
+| default-monitor | 0 | integer | Default monitor to display the overlay on. 0 = your primary monitor |
+| background-opacity | 0.25 | double | Overlay background opacity, 0.00-1.00 |
+| foreground-opacity | 0.75 | double | Overlay foreground (font) opacity, 0.00-1.00 |
 | **Keybinds** |
-| kb-toggle-overlay | Super + Alt + G | keybind | Toggles overlay display (bound to show-overlay setting) |
+| kb-toggle-overlay | &lt;Super&gt;&lt;Alt&gt;g | keybind | Toggles overlay display (bound to show-overlay setting), special keys like &lt;Alt&gt; must be surrounded in &lt; &gt; |
 </details>
 
 ## Development

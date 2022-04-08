@@ -70,28 +70,72 @@ var overlay = class Overlay extends GObject.Object
         log(_(`${Me.metadata.uuid}: Overlay toggled`));
 
         let icon = new Gio.ThemedIcon({ name: "face-laugh-symbolic" });
-        Main.osdWindowManager.show(0, icon , _("Overlay toggled\n\nUse Super+Alt+G to toggle"), null);
+        Main.osdWindowManager.show(
+            0, 
+            icon, 
+            _("Overlay toggled\n\nUse Super+Alt+G to toggle"), 
+            null,
+        );
 
         // Show the overlay
         if (this._settings.get_boolean("show-overlay"))
         {
-            this.overlay = new St.Widget();
-            let monitor = Main.layoutManager.currentMonitor;
+            let mI = this._settings.get_int("default-monitor");
+            let monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.currentMonitor;
+            let x = 0;
+            let y = 0;
+            let width = monitor.height * 0.12;
+            let height = monitor.height * 0.12;
+            let anchor = this._settings.get_int("anchor-corner")
 
+            // Left corners
+            if (anchor % 2 == 0)
+            {
+                x = Math.ceil(monitor.width * 0.02);
+            }
+            // Right corners
+            else
+            {
+                x = monitor.width - width - Math.ceil(monitor.width * 0.02);
+            }
+            // Top corners
+            if (anchor <= 1)
+            {
+                y = Math.ceil(monitor.width * 0.02);
+            }
+            // Bottom corners
+            else
+            {
+                y = monitor.height - height - Math.ceil(monitor.width * 0.02);
+            }
+
+            // Overlay container
+            this.overlay = new St.Widget();
+            this.overlay.set_position(x, y);
+            this.overlay.set_size(width, height);
+            this.overlay.add_style_class_name("test");
+            this.overlay.set_style(
+                `background-color: rgba(0, 0, 0, ${this._settings.get_double("background-opacity")});`
+            );
+
+            // RAM label
             this.ramLabel = new St.Label();
             this.ramLabel.set_text(_("RAM 0.00%"));
             this.ramLabel.set_position(25, 25);
+            this.ramLabel.set_style(
+                `color: rgba(255, 255, 255, ${this._settings.get_double("foreground-opacity")});`
+            );
             this.overlay.add_child(this.ramLabel);
 
+            // CPU label
             this.cpuLabel = new St.Label();
             this.cpuLabel.set_text(_("CPU 0.00%"));
             this.cpuLabel.set_position(25, 75);
+            this.cpuLabel.set_style(
+                `color: rgba(255, 255, 255, ${this._settings.get_double("foreground-opacity")});`
+            );
             this.overlay.add_child(this.cpuLabel);
-
-            this.overlay.add_style_class_name("test");
             
-            this.overlay.set_position(monitor.width - 300, 100);
-            this.overlay.set_size(250, 250);
             Main.layoutManager.addTopChrome(this.overlay, null);
 
             if (!this._eventLoop)
@@ -124,8 +168,9 @@ var overlay = class Overlay extends GObject.Object
 
         this.ram.total = dataRAM[0];
         this.ram.used = dataRAM[1];
+        let ramPerc = (this.ram.used / this.ram.total) * 100;
 
-        this.ramLabel.set_text(_(`RAM ${((this.ram.used / this.ram.total) * 100).toFixed(2)}%`));
+        this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
 
         // CPU
         let stdoutCPU = ByteArray.toString(GLib.spawn_command_line_sync("head -n1 /proc/stat")[1]);
@@ -142,8 +187,9 @@ var overlay = class Overlay extends GObject.Object
 
         let cpuDelta = this.cpu.total - this.cpu.oldTotal;
         let cpuUsed = this.cpu.used - this.cpu.oldUsed;
+        let cpuPerc = (cpuUsed / cpuDelta) * 100;
 
-        this.cpuLabel.set_text(_(`CPU ${((cpuUsed / cpuDelta) * 100).toFixed(2)}%`));
+        this.cpuLabel.set_text(_(`CPU ${cpuPerc.toFixed(2)}%`));
 
         return true;
     }

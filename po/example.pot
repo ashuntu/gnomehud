@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-05 10:29-0500\n"
+"POT-Creation-Date: 2022-04-08 17:11-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: indicator.js:60
+#: indicator.js:61
 msgid "Overlay"
 msgstr ""
 
-#: indicator.js:77
+#: indicator.js:83 prefs.js:23
 msgid "Settings"
 msgstr ""
 
-#: indicator.js:82
+#: indicator.js:88
 msgid "Disable"
 msgstr ""
 
-#: overlay.js:68
+#: overlay.js:76
 msgid ""
 "Overlay toggled\n"
 "\n"
 "Use Super+Alt+G to toggle"
 msgstr ""
 
-#: overlay.js:88
+#: overlay.js:118
 msgid "RAM 0.00%"
 msgstr ""
 
-#: overlay.js:92
+#: overlay.js:126
 msgid "CPU 0.00%"
 msgstr ""
 
@@ -50,4 +50,32 @@ msgstr ""
 
 #: prefs.js:46
 msgid "Show Overlay"
+msgstr ""
+
+#: prefs.js:65
+msgid "Update Delay (ms)"
+msgstr ""
+
+#: prefs.js:83
+msgid "Anchor Corner"
+msgstr ""
+
+#: prefs.js:104
+msgid "Default Monitor"
+msgstr ""
+
+#: prefs.js:122
+msgid "Background Opacity"
+msgstr ""
+
+#: prefs.js:146
+msgid "Foreground Opacity"
+msgstr ""
+
+#: prefs.js:170
+msgid "Keybinds"
+msgstr ""
+
+#: prefs.js:173
+msgid "Toggle Overlay"
 msgstr ""
