@@ -23,6 +23,12 @@ var overlay = class Overlay extends GObject.Object
         GObject.registerClass(this);
     }
 
+    /**
+     * Construct a new HUD Overlay. `create()` must be called once other GObjects
+     * are constructed.
+     * 
+     * @param {Object} extension 
+     */
     constructor(extension)
     {
         super();
@@ -46,6 +52,9 @@ var overlay = class Overlay extends GObject.Object
         };
     }
 
+    /**
+     * Create necessary bindings/objects for the Overlay to function.
+     */
     create()
     {
         Main.wm.addKeybinding(
@@ -60,11 +69,17 @@ var overlay = class Overlay extends GObject.Object
         this._settings.connect("changed::update-delay", () => this.delayChanged());
     }
 
+    /**
+     * Called when the kb-toggle-overlay keybind is pressed. Toggles the show-overlay setting.
+     */
     toggleOverlay()
     {
         this._settings.set_boolean("show-overlay", !this._settings.get_boolean("show-overlay"));
     }
 
+    /**
+     * Toggle the Overlay on and off. Toggling off will destroy any created objects.
+     */
     toggle()
     {
         log(_(`${Me.metadata.uuid}: Overlay toggled`));
@@ -160,6 +175,11 @@ var overlay = class Overlay extends GObject.Object
         }
     }
 
+    /**
+     * Query the hardware for updates and update overlay labels.
+     * 
+     * @returns {boolean} true
+     */
     update()
     {
         // RAM
@@ -194,6 +214,10 @@ var overlay = class Overlay extends GObject.Object
         return true;
     }
 
+    /**
+     * Called when the update-delay setting is changed and live updates the event
+     * loop delay to reflect the change.
+     */
     delayChanged()
     {
         if (this._eventLoop && this._settings.get_boolean("show-overlay"))
@@ -208,6 +232,9 @@ var overlay = class Overlay extends GObject.Object
         );
     }
 
+    /**
+     * Destroy this object and objects it created.
+     */
     destroy()
     {
         Main.wm.removeKeybinding("kb-toggle-overlay");

@@ -22,6 +22,12 @@ var indicator = class Indicator extends GObject.Object
         GObject.registerClass(this);
     }
 
+    /**
+     * Construct a new Indicator. `create()` must be called once other GObjects
+     * are constructed.
+     * 
+     * @param {Object} extension 
+     */
     constructor(extension)
     {
         super();
@@ -30,6 +36,9 @@ var indicator = class Indicator extends GObject.Object
         this._settings = extension.settings;
     }
 
+    /**
+     * Create necessary bindings/objects for the Indicator to function.
+     */
     create()
     {
         // Toolbar button
@@ -90,23 +99,36 @@ var indicator = class Indicator extends GObject.Object
         this._button.menu.addMenuItem(disableItem);
     }
 
+    /**
+     * Called when the indicator switch is flipped. Toggles the show-overlay setting.
+     */
     toggleOverlay()
     {
         this._settings.set_boolean("show-overlay", this._settings.get_boolean("show-overlay"));
     }
 
+    /**
+     * Called when the setting button is pressed. Opens the extension preferences 
+     * window.
+     */
     settingsButtonActivate()
     {
         log(_(`${Me.metadata.uuid}: Opening settings dialog`));
         ExtensionManager.openExtensionPrefs(Me.metadata.uuid, "", null);
     }
 
+    /**
+     * Called when the disable button is pressed. Disables the extension manually.
+     */
     disableButtonActivate()
     {
         log(_(`${Me.metadata.uuid}: User disabling extension`));
         ExtensionManager.disableExtension(Me.metadata.uuid)
     }
 
+    /**
+     * Destroy this object and objects it created.
+     */
     destroy()
     {
         if (this._button) this._button.destroy();

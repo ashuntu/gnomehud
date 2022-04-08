@@ -12,11 +12,19 @@ const ngettext = Domain.ngettext;
 
 let settings;
 
+/**
+ * Intialize objects needed for the preferences page.
+ */
 function init()
 {
     settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
 }
 
+/**
+ * Create the preferences window.
+ * 
+ * @param {Adw.PreferencesWindow} window 
+ */
 function fillPreferencesWindow(window)
 {
     const page = new Adw.PreferencesPage();
@@ -190,6 +198,12 @@ function fillPreferencesWindow(window)
     window.add(page);
 }
 
+/**
+ * Called when the kb-toggle-overlay field is changed. Updates the actual extension
+ * setting.
+ * 
+ * @param {Gtk.Text} text
+ */
 function keybindUpdate(text)
 {
     settings.set_strv("kb-toggle-overlay", [text.get_text()]);
