@@ -3,6 +3,7 @@
 const { Clutter, St, GObject, Gio, GLib, Shell, Meta } = imports.gi;
 
 const Mainloop = imports.mainloop;
+const ByteArray = imports.byteArray;
 
 const Main = imports.ui.main;
 
@@ -118,7 +119,7 @@ var overlay = class Overlay extends GObject.Object
     update()
     {
         // RAM
-        let stdoutRAM = String(GLib.spawn_command_line_sync("free")[1]);
+        let stdoutRAM = ByteArray.toString(GLib.spawn_command_line_sync("free")[1]);
         let dataRAM = stdoutRAM.match(/^\d+|\d+\b|\d+(?=\w)/g); // array of numbers in stdout
 
         this.ram.total = dataRAM[0];
@@ -127,7 +128,7 @@ var overlay = class Overlay extends GObject.Object
         this.ramLabel.set_text(_(`RAM ${((this.ram.used / this.ram.total) * 100).toFixed(2)}%`));
 
         // CPU
-        let stdoutCPU = String(GLib.spawn_command_line_sync("head -n1 /proc/stat")[1]);
+        let stdoutCPU = ByteArray.toString(GLib.spawn_command_line_sync("head -n1 /proc/stat")[1]);
         let dataCPU = (stdoutCPU.split(" ")).filter((x) => { return x != "" && !isNaN(x) })
         
         this.cpu.oldTotal = this.cpu.total;
