@@ -84,8 +84,8 @@ var overlay = class Overlay extends GObject.Object
             let monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.currentMonitor;
             let x = 0;
             let y = 0;
-            let width = monitor.height * 0.12;
-            let height = monitor.height * 0.12;
+            let width = Math.ceil(monitor.height * 0.12);
+            let height = Math.ceil(monitor.height * 0.12);
             let anchor = this._settings.get_int("anchor-corner")
 
             // Left corners
