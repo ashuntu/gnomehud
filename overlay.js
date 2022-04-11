@@ -96,9 +96,9 @@ var overlay = class Overlay extends GObject.Object
         if (this._settings.get_boolean("show-overlay"))
         {
             let mI = this._settings.get_int("default-monitor");
-            let monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.currentMonitor;
-            let x = 0;
-            let y = 0;
+            let monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
+            let x = monitor.x;
+            let y = monitor.y;
             let width = Math.ceil(monitor.height * 0.12);
             let height = Math.ceil(monitor.height * 0.12);
             let anchor = this._settings.get_int("anchor-corner")
@@ -106,22 +106,22 @@ var overlay = class Overlay extends GObject.Object
             // Left corners
             if (anchor % 2 == 0)
             {
-                x = Math.ceil(monitor.width * 0.02);
+                x += Math.ceil(monitor.width * 0.02);
             }
             // Right corners
             else
             {
-                x = monitor.width - width - Math.ceil(monitor.width * 0.02);
+                x += monitor.width - width - Math.ceil(monitor.width * 0.02);
             }
             // Top corners
             if (anchor <= 1)
             {
-                y = Math.ceil(monitor.width * 0.02);
+                y += Math.ceil(monitor.width * 0.02);
             }
             // Bottom corners
             else
             {
-                y = monitor.height - height - Math.ceil(monitor.width * 0.02);
+                y += monitor.height - height - Math.ceil(monitor.width * 0.02);
             }
 
             // Overlay container
