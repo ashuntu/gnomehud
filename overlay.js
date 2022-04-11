@@ -95,9 +95,9 @@ var overlay = class Overlay extends GObject.Object
         // Show the overlay
         if (this._settings.get_boolean("show-overlay"))
         {
-            let mI = this._settings.get_int("default-monitor");
+            let mI = this._settings.get_int("default-monitor") - 1;
             let monitor = Main.layoutManager.primaryMonitor;
-            if (mI != 0) monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
+            if (mI >= 0) monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
             let x = monitor.x;
             let y = monitor.y;
             let width = Math.ceil(monitor.height * 0.12);
