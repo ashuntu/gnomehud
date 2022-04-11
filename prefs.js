@@ -113,7 +113,7 @@ function fillPreferencesWindow(window)
     group.add(monitorRow);
 
     const monitorSelector = Gtk.DropDown.new_from_strings([
-        "0", "1", "2", "3", "4"
+        "Primary", "1", "2", "3", "4"
     ]);
 
     settings.bind(
