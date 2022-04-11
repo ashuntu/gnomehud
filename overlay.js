@@ -84,7 +84,7 @@ var overlay = class Overlay extends GObject.Object
     {
         log(_(`${Me.metadata.uuid}: Overlay toggled`));
 
-        let icon = new Gio.ThemedIcon({ name: "face-laugh-symbolic" });
+        let icon = new Gio.ThemedIcon({ name: "utilities-system-monitor-symbolic" });
         Main.osdWindowManager.show(
             0, 
             icon, 
