@@ -1,6 +1,6 @@
 "use strict";
 
-const { Adw, Gio, Gtk } = imports.gi;
+const { Adw, Gio, GLib, Gtk } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -33,6 +33,10 @@ function fillPreferencesWindow(window)
 
     // show-indicator
     const indicatorRow = new Adw.ActionRow({ title: _("Show Extension Indicator") });
+    indicatorRow.set_subtitle(
+        _(`Use 'gnome-extensions prefs ${Me.metadata.uuid}' to access this window manually.`)
+    );
+    indicatorRow.set_icon_name("utilities-system-monitor-symbolic");
     group.add(indicatorRow);
 
     const indicatorToggle = new Gtk.Switch({
@@ -49,6 +53,7 @@ function fillPreferencesWindow(window)
 
     indicatorRow.add_suffix(indicatorToggle);
     indicatorRow.activatable_widget = indicatorToggle;
+    addResetButton(indicatorRow, "show-indicator");
 
     // show-overlay
     const overlayRow = new Adw.ActionRow({ title: _("Show Overlay") });
@@ -68,6 +73,7 @@ function fillPreferencesWindow(window)
 
     overlayRow.add_suffix(overlayToggle);
     overlayRow.activatable_widget = overlayToggle;
+    addResetButton(overlayRow, "show-overlay");
 
     // update-delay
     const delayRow = new Adw.ActionRow({ title: _("Update Delay (ms)") });
@@ -86,6 +92,7 @@ function fillPreferencesWindow(window)
 
     delayRow.add_suffix(delayRange);
     delayRow.activatable_widget = delayRange;
+    addResetButton(delayRow, "update-delay");
 
     // anchor-corner
     const anchorRow = new Adw.ActionRow({ title: _("Anchor Corner" )});
@@ -107,6 +114,7 @@ function fillPreferencesWindow(window)
 
     anchorRow.add_suffix(anchorSelector);
     anchorRow.activatable_widget = anchorSelector;
+    addResetButton(anchorRow, "anchor-corner");
 
     // default-monitor
     const monitorRow = new Adw.ActionRow({ title: _("Default Monitor")} );
@@ -125,6 +133,7 @@ function fillPreferencesWindow(window)
 
     monitorRow.add_suffix(monitorSelector);
     monitorRow.activatable_widget = monitorSelector;
+    addResetButton(monitorRow, "default-monitor");
 
     // background-opacity
     const backgroundOpacityRow = new Adw.ActionRow({ title: _("Background Opacity") });
@@ -149,6 +158,7 @@ function fillPreferencesWindow(window)
 
     backgroundOpacityRow.add_suffix(backgroundOpacityScale);
     backgroundOpacityRow.activatable_widget = backgroundOpacityScale;
+    addResetButton(backgroundOpacityRow, "background-opacity");
 
     // foreground-opacity
     const foregroundOpacityRow = new Adw.ActionRow({ title: _("Foreground Opacity") });
@@ -173,6 +183,7 @@ function fillPreferencesWindow(window)
 
     foregroundOpacityRow.add_suffix(foregroundOpacityScale);
     foregroundOpacityRow.activatable_widget = foregroundOpacityScale;
+    addResetButton(foregroundOpacityRow, "foreground-opacity");
 
     // keybinds
     const keybindGroup = new Adw.PreferencesGroup({ title: _("Keybinds") });
@@ -180,10 +191,6 @@ function fillPreferencesWindow(window)
 
     const toggleKeybindRow = new Adw.ActionRow({ title: _("Toggle Overlay") });
     keybindGroup.add(toggleKeybindRow);
-
-    // addResetButton(toggleKeybindRow, "kb-toggle-overlay", 
-    //     () => toggleKeybindText.set_text(settings.get_strv("kb-toggle-overlay")[0])
-    // );
 
     const toggleKeybindText = new Gtk.Text()
 
@@ -194,8 +201,30 @@ function fillPreferencesWindow(window)
 
     toggleKeybindRow.add_suffix(toggleKeybindText);
     toggleKeybindRow.activatable_widget = toggleKeybindText;
+    addResetButton(toggleKeybindRow, "kb-toggle-overlay");
 
     window.add(page);
+
+    // danger zone!
+    const dangerGroup = new Adw.PreferencesGroup({ title: _("Danger Zone!") });
+    page.add(dangerGroup);
+
+    // reset
+    const resetButton = Gtk.Button.new_with_label(_("Reset Settings"));
+    resetButton.connect("clicked", () => resetButtonActivate());
+    resetButton.set_margin_bottom(10);
+    dangerGroup.add(resetButton);
+
+    // disable
+    const disableButton = Gtk.Button.new_with_label(_("Disable Extension"));
+    disableButton.connect("clicked", () => disableButtonActivate());
+    disableButton.set_margin_bottom(20);
+    dangerGroup.add(disableButton);
+
+    // info
+    const infoLabel = Gtk.Label.new(_(`Source: ${Me.metadata.url}`));
+    infoLabel.selectable = true;
+    dangerGroup.add(infoLabel);
 }
 
 /**
@@ -209,16 +238,51 @@ function keybindUpdate(text)
     settings.set_strv("kb-toggle-overlay", [text.get_text()]);
 }
 
-// function addResetButton(row, key, callback)
-// {
-//     const button = Gtk.Button.new_from_icon_name("edit-undo-symbolic");
-//     row.add_suffix(button);
-//     button.set_sensitive(!settings.get_default_value(key).equal(settings.get_value(key)));
-//     button.connect("clicked", () => {
-//         button.set_sensitive(false);
-//         settings.reset(key);
-//         callback();
-//     });
+/**
+ * Called when the reset button is pressed. Resets all extension settings.
+ */
+function resetButtonActivate()
+{
+    settings.set_boolean("show-overlay", false);
+    settings.settings_schema.list_keys().forEach(x => settings.reset(x));
+}
 
-//     return button;
-// }
+/**
+ * Called when the disable button is pressed. Disables the extension manually.
+ */
+function disableButtonActivate()
+{
+    log(_(`${Me.metadata.uuid}: User disabling extension`));
+    GLib.spawn_command_line_async(`gnome-extensions disable ${Me.metadata.uuid}`);
+}
+
+/**
+ * Adds a new Gtk.Button to the given row for resetting the given key.
+ * 
+ * @param {Adw.ActionRow} row the Adw.ActionRow to append to
+ * @param {string} key the settings key to reset when pressed
+ * @returns {Gtk.Button} the Gtk.Button created
+ */
+function addResetButton(row, key)
+{
+    const button = Gtk.Button.new_from_icon_name("edit-undo-symbolic");
+    button.connect("clicked", () => settings.reset(key));
+    row.add_suffix(button);
+
+    settings.connect(`changed::${key}`, () => updateResetButton(button, key));
+    updateResetButton(button, key);
+
+    return button;
+}
+
+/**
+ * Update the sensitivty of the given button based if the given key's value
+ * is different from its default value.
+ * 
+ * @param {Gtk.Button} button the Gtk.Button to update
+ * @param {string} key the settings key to check against
+ */
+function updateResetButton(button, key)
+{
+    button.set_sensitive(!settings.get_default_value(key).equal(settings.get_value(key)));
+}
