@@ -75,6 +75,26 @@ function fillPreferencesWindow(window)
     overlayRow.activatable_widget = overlayToggle;
     addResetButton(overlayRow, "show-overlay");
 
+    // show-osd
+    const osdRow = new Adw.ActionRow({ title: _("Show Toggle Alerts") });
+    group.add(osdRow);
+
+    const osdToggle = new Gtk.Switch({
+        active: settings.get_boolean("show-osd"),
+        valign: Gtk.Align.CENTER,
+    });
+
+    settings.bind(
+        "show-osd",
+        osdToggle,
+        "active",
+        Gio.SettingsBindFlags.DEFAULT,
+    );
+
+    osdRow.add_suffix(osdToggle);
+    osdRow.activatable_widget = osdToggle;
+    addResetButton(osdRow, "show-osd");
+
     // update-delay
     const delayRow = new Adw.ActionRow({ title: _("Update Delay (ms)") });
     group.add(delayRow);

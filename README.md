@@ -36,7 +36,8 @@ Extension settings can be accessed through the indicator in the status area with
 | Setting | Default | Type | Description |
 |---------|---------|------|-------------|
 | show-indicator | true | boolean | Show the top-panel indicator button |
-| show-overlay | false | boolean | Show the HUD overlay |
+| show-overlay | true | boolean | Show the HUD overlay |
+| show-osd | true | boolean | Show toggle overlay alerts |
 | update-delay | 1000 | integer | Delay in milliseconds between overlay updates, 250-5000 |
 | anchor-corner | 1 | integer | Corner of the monitor to anchor the overlay to. 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right |
 | default-monitor | 0 | integer | Default monitor to display the overlay on. 0 = your primary monitor |
