@@ -21,16 +21,16 @@
         <key name="anchor-corner" type="i">
             <default>1</default>
         </key>
-        <key name="margin-left" type="d">
+        <key name="margin-v" type="d">
             <default>0.02</default>
         </key>
-        <key name="margin-right" type="d">
+        <key name="margin-h" type="d">
             <default>0.02</default>
         </key>
-        <key name="overlay-height" type="d">
+        <key name="overlay-h" type="d">
             <default>0.12</default>
         </key>
-        <key name="overlay-width" type="d">
+        <key name="overlay-w" type="d">
             <default>0.12</default>
         </key>
         <key name="background-color" type="s">
