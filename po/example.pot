@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-08 17:11-0500\n"
+"POT-Creation-Date: 2022-04-12 16:36-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,65 +17,94 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: indicator.js:61
+#: indicator.js:70
 msgid "Overlay"
 msgstr ""
 
-#: indicator.js:83 prefs.js:23
+#: indicator.js:92 prefs.js:31
 msgid "Settings"
 msgstr ""
 
-#: indicator.js:88
+#: indicator.js:97
 msgid "Disable"
 msgstr ""
 
-#: overlay.js:76
-msgid ""
-"Overlay toggled\n"
-"\n"
-"Use Super+Alt+G to toggle"
-msgstr ""
-
-#: overlay.js:118
+#: overlay.js:122
 msgid "RAM 0.00%"
 msgstr ""
 
-#: overlay.js:126
+#: overlay.js:128
 msgid "CPU 0.00%"
 msgstr ""
 
-#: prefs.js:27
+#: prefs.js:35
 msgid "Show Extension Indicator"
 msgstr ""
 
-#: prefs.js:46
+#: prefs.js:59
 msgid "Show Overlay"
 msgstr ""
 
-#: prefs.js:65
+#: prefs.js:79
+msgid "Show Toggle Alerts"
+msgstr ""
+
+#: prefs.js:99
 msgid "Update Delay (ms)"
 msgstr ""
 
-#: prefs.js:83
+#: prefs.js:118
 msgid "Anchor Corner"
 msgstr ""
 
-#: prefs.js:104
+#: prefs.js:122
+msgid "Top-Left"
+msgstr ""
+
+#: prefs.js:123
+msgid "Top-Right"
+msgstr ""
+
+#: prefs.js:124
+msgid "Bottom-Left"
+msgstr ""
+
+#: prefs.js:125
+msgid "Bottom-Right"
+msgstr ""
+
+#: prefs.js:140
 msgid "Default Monitor"
 msgstr ""
 
-#: prefs.js:122
-msgid "Background Opacity"
+#: prefs.js:144
+msgid "Primary"
 msgstr ""
 
-#: prefs.js:146
-msgid "Foreground Opacity"
+#: prefs.js:159
+msgid "Background Color"
 msgstr ""
 
-#: prefs.js:170
+#: prefs.js:202
+msgid "Foreground Color"
+msgstr ""
+
+#: prefs.js:245
 msgid "Keybinds"
 msgstr ""
 
-#: prefs.js:173
+#: prefs.js:248
 msgid "Toggle Overlay"
+msgstr ""
+
+#: prefs.js:263
+msgid "Danger Zone!"
+msgstr ""
+
+#: prefs.js:267
+msgid "Reset Settings"
+msgstr ""
+
+#: prefs.js:273
+msgid "Disable Extension"
 msgstr ""

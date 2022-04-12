@@ -49,10 +49,16 @@ Extension settings can be accessed through the indicator in the status area with
 
 ## Development
 
-### View GNOME shell logs
+### View logs
 
+*GNOME Shell*
 ```
 journalctl -f -o cat /usr/bin/gnome-shell
+```
+
+*GJS*
+```
+journalctl -f -o cat /usr/bin/gjs
 ```
 
 ### Pack Extension

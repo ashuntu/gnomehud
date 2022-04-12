@@ -1,6 +1,6 @@
 "use strict";
 
-const { Clutter, St, GObject, Gio, GLib, Shell, Meta } = imports.gi;
+const { Clutter, St, Gdk, GObject, Gio, GLib, Shell, Meta } = imports.gi;
 
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
@@ -36,6 +36,10 @@ var overlay = class Overlay extends GObject.Object
         this._extension = extension;
         this._settings = extension.settings;
 
+        this.overlay = null;
+        this.ramLabel = null;
+        this.cpuLabel = null;
+
         this.ram = {
             total: 0,
             used: 0,
@@ -67,6 +71,13 @@ var overlay = class Overlay extends GObject.Object
 
         this._settings.connect("changed::show-overlay", () => this.toggle());
         this._settings.connect("changed::update-delay", () => this.delayChanged());
+        this._settings.connect("changed::anchor-corner", () => this.geometryChanged());
+        this._settings.connect("changed::default-monitor", () => this.geometryChanged());
+        this._settings.connect("changed::background-opacity", () => this.updateBackground());
+        this._settings.connect("changed::foreground-opacity", () => this.updateForeground());
+        this._settings.connect("changed::background-color", () => this.updateBackground());
+        this._settings.connect("changed::foreground-color", () => this.updateForeground());
+        Main.layoutManager.connect("monitors-changed", () => this.geometryChanged());
     }
 
     /**
@@ -90,7 +101,7 @@ var overlay = class Overlay extends GObject.Object
             Main.osdWindowManager.show(
                 0, 
                 icon, 
-                _("Overlay toggled\n\nUse Super+Alt+G to toggle"), 
+                _(`Overlay toggled\n\nUse ${this._settings.get_strv("kb-toggle-overlay")[0]} to toggle`), 
                 null,
             );
         }
@@ -98,62 +109,28 @@ var overlay = class Overlay extends GObject.Object
         // Show the overlay
         if (this._settings.get_boolean("show-overlay"))
         {
-            let mI = this._settings.get_int("default-monitor") - 1;
-            let monitor = Main.layoutManager.primaryMonitor;
-            if (mI >= 0) monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
-            let x = monitor.x;
-            let y = monitor.y;
-            let width = Math.ceil(monitor.height * 0.12);
-            let height = Math.ceil(monitor.height * 0.12);
-            let anchor = this._settings.get_int("anchor-corner")
-
-            // Left corners
-            if (anchor % 2 == 0)
-            {
-                x += Math.ceil(monitor.width * 0.02);
-            }
-            // Right corners
-            else
-            {
-                x += monitor.width - width - Math.ceil(monitor.width * 0.02);
-            }
-            // Top corners
-            if (anchor <= 1)
-            {
-                y += Math.ceil(monitor.width * 0.02);
-            }
-            // Bottom corners
-            else
-            {
-                y += monitor.height - height - Math.ceil(monitor.width * 0.02);
-            }
+            let geo = this.updateGeometry();
 
             // Overlay container
             this.overlay = new St.Widget();
-            this.overlay.set_position(x, y);
-            this.overlay.set_size(width, height);
-            this.overlay.add_style_class_name("test");
-            this.overlay.set_style(
-                `background-color: rgba(0, 0, 0, ${this._settings.get_double("background-opacity")});`
-            );
+            this.overlay.set_position(geo.x, geo.y);
+            this.overlay.set_size(geo.width, geo.height);
+            this.overlay.add_style_class_name("overlay");
 
             // RAM label
             this.ramLabel = new St.Label();
             this.ramLabel.set_text(_("RAM 0.00%"));
             this.ramLabel.set_position(25, 25);
-            this.ramLabel.set_style(
-                `color: rgba(255, 255, 255, ${this._settings.get_double("foreground-opacity")});`
-            );
             this.overlay.add_child(this.ramLabel);
 
             // CPU label
             this.cpuLabel = new St.Label();
             this.cpuLabel.set_text(_("CPU 0.00%"));
             this.cpuLabel.set_position(25, 75);
-            this.cpuLabel.set_style(
-                `color: rgba(255, 255, 255, ${this._settings.get_double("foreground-opacity")});`
-            );
             this.overlay.add_child(this.cpuLabel);
+
+            this.updateBackground();
+            this.updateForeground();
             
             Main.layoutManager.addTopChrome(this.overlay, null);
 
@@ -234,6 +211,105 @@ var overlay = class Overlay extends GObject.Object
             this._settings.get_int("update-delay"), 
             () => this.update(),
         );
+    }
+
+    /**
+     * Get the anchor coordinates and dimensions for the overlay.
+     * 
+     * @returns {Object} x, y, width, height object
+     */
+    updateGeometry()
+    {
+        let mI = this._settings.get_int("default-monitor") - 1;
+        this.monitor = Main.layoutManager.primaryMonitor;
+        if (mI >= 0) this.monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
+
+        let anchor = this._settings.get_int("anchor-corner");
+        let x = this.monitor.x;
+        let y = this.monitor.y;
+        let width = Math.ceil(this.monitor.height * 0.12);
+        let height = Math.ceil(this.monitor.height * 0.12);
+
+        // Left corners
+        if (anchor % 2 == 0)
+        {
+            x += Math.ceil(this.monitor.width * 0.02);
+        }
+        // Right corners
+        else
+        {
+            x += this.monitor.width - width - Math.ceil(this.monitor.width * 0.02);
+        }
+        // Top corners
+        if (anchor <= 1)
+        {
+            y += Math.ceil(this.monitor.width * 0.02);
+        }
+        // Bottom corners
+        else
+        {
+            y += this.monitor.height - height - Math.ceil(this.monitor.width * 0.02);
+        }
+
+        return { x: x, y: y, width: width, height: height };
+    }
+
+    /**
+     * Called when a geometry setting like location or size is changed. Updates
+     * the overlay position.
+     */
+    geometryChanged()
+    {
+        let geo = this.updateGeometry();
+
+        if (this.overlay)
+        {
+            this.overlay.set_position(geo.x, geo.y);
+            this.overlay.set_size(geo.width, geo.height);
+        }
+    }
+
+    /**
+     * Called when background color is changed. Updates the background color and
+     * opacity.
+     */
+    updateBackground()
+    {
+        if (this.overlay)
+        {
+            let rgba = new Gdk.RGBA();
+            rgba.parse(this._settings.get_string("background-color"));
+            let str = this.getRGBAString(rgba, this._settings.get_double("background-opacity"));
+            this.overlay.set_style(`background-color: ${str}`);
+        }
+    }
+
+    /**
+     * Called when foreground color is changed. Updates the foreground color and
+     * opacity.
+     */
+    updateForeground()
+    {
+        let rgba = new Gdk.RGBA();
+        rgba.parse(this._settings.get_string("foreground-color"));
+        let str = this.getRGBAString(rgba, this._settings.get_double("foreground-opacity"));
+
+        
+        if (this.ramLabel)
+        {
+            log(str);
+            this.ramLabel.set_style(`color: ${str}`);
+        }
+        
+        if (this.cpuLabel)
+        {
+            this.cpuLabel.set_style(`color: ${str}`);
+        }
+    }
+
+    getRGBAString(rgba, opacity)
+    {
+        return `rgba(${rgba.red * 255}, ${rgba.green * 255}, ${rgba.blue * 255}, ${opacity});`;
     }
 
     /**
