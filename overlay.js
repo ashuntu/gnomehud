@@ -73,6 +73,10 @@ var overlay = class Overlay extends GObject.Object
         this._settings.connect("changed::update-delay", () => this.delayChanged());
         this._settings.connect("changed::anchor-corner", () => this.geometryChanged());
         this._settings.connect("changed::default-monitor", () => this.geometryChanged());
+        this._settings.connect("changed::margin-h", () => this.geometryChanged());
+        this._settings.connect("changed::margin-v", () => this.geometryChanged());
+        this._settings.connect("changed::overlay-w", () => this.geometryChanged());
+        this._settings.connect("changed::overlay-h", () => this.geometryChanged());
         this._settings.connect("changed::background-opacity", () => this.updateBackground());
         this._settings.connect("changed::foreground-opacity", () => this.updateForeground());
         this._settings.connect("changed::background-color", () => this.updateBackground());
@@ -227,28 +231,28 @@ var overlay = class Overlay extends GObject.Object
         let anchor = this._settings.get_int("anchor-corner");
         let x = this.monitor.x;
         let y = this.monitor.y;
-        let width = Math.ceil(this.monitor.height * 0.12);
-        let height = Math.ceil(this.monitor.height * 0.12);
+        let width = Math.ceil(this.monitor.height * this._settings.get_double("overlay-w"));
+        let height = Math.ceil(this.monitor.height * this._settings.get_double("overlay-h"));
 
         // Left corners
         if (anchor % 2 == 0)
         {
-            x += Math.ceil(this.monitor.width * 0.02);
+            x += Math.ceil(this.monitor.height * this._settings.get_double("margin-h"));
         }
         // Right corners
         else
         {
-            x += this.monitor.width - width - Math.ceil(this.monitor.width * 0.02);
+            x += this.monitor.width - width - Math.ceil(this.monitor.height * this._settings.get_double("margin-h"));
         }
         // Top corners
         if (anchor <= 1)
         {
-            y += Math.ceil(this.monitor.width * 0.02);
+            y += Math.ceil(this.monitor.height * this._settings.get_double("margin-v"));
         }
         // Bottom corners
         else
         {
-            y += this.monitor.height - height - Math.ceil(this.monitor.width * 0.02);
+            y += this.monitor.height - height - Math.ceil(this.monitor.height * this._settings.get_double("margin-v"));
         }
 
         return { x: x, y: y, width: width, height: height };

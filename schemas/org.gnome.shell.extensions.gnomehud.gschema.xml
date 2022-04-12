@@ -22,10 +22,10 @@
             <default>1</default>
         </key>
         <key name="margin-v" type="d">
-            <default>0.02</default>
+            <default>0.04</default>
         </key>
         <key name="margin-h" type="d">
-            <default>0.02</default>
+            <default>0.04</default>
         </key>
         <key name="overlay-h" type="d">
             <default>0.12</default>

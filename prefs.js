@@ -155,15 +155,105 @@ function fillPreferencesWindow(window)
     monitorRow.activatable_widget = monitorSelector;
     addResetButton(monitorRow, "default-monitor");
 
+    // margin-h
+    const marginHRow = new Adw.ActionRow({ title: _("Margin (horizontal)") });
+    group.add(marginHRow);
+
+    const marginHScale = Gtk.Scale.new_with_range(
+        Gtk.Orientation.HORIZONTAL,
+        0, 0.5, 0.01
+    )
+    marginHScale.set_hexpand(true);
+    marginHScale.set_draw_value(true);
+    marginHScale.set_digits(2);
+
+    settings.bind(
+        "margin-h",
+        marginHScale.get_adjustment(),
+        "value",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    marginHRow.add_suffix(marginHScale);
+    marginHRow.activatable_widget = marginHScale;
+    addResetButton(marginHRow, "margin-h");
+
+    // margin-v
+    const marginVRow = new Adw.ActionRow({ title: _("Margin (vertical)") });
+    group.add(marginVRow);
+
+    const marginVScale = Gtk.Scale.new_with_range(
+        Gtk.Orientation.HORIZONTAL,
+        0, 0.5, 0.01
+    )
+    marginVScale.set_hexpand(true);
+    marginVScale.set_draw_value(true);
+    marginVScale.set_digits(2);
+
+    settings.bind(
+        "margin-v",
+        marginVScale.get_adjustment(),
+        "value",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    marginVRow.add_suffix(marginVScale);
+    marginVRow.activatable_widget = marginVScale;
+    addResetButton(marginVRow, "margin-v");
+
+    // overlay-w
+    const overlayWRow = new Adw.ActionRow({ title: _("Overlay Width") });
+    group.add(overlayWRow);
+
+    const overlayWScale = Gtk.Scale.new_with_range(
+        Gtk.Orientation.HORIZONTAL,
+        0, 0.5, 0.01
+    )
+    overlayWScale.set_hexpand(true);
+    overlayWScale.set_draw_value(true);
+    overlayWScale.set_digits(2);
+
+    settings.bind(
+        "overlay-w",
+        overlayWScale.get_adjustment(),
+        "value",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    overlayWRow.add_suffix(overlayWScale);
+    overlayWRow.activatable_widget = overlayWScale;
+    addResetButton(overlayWRow, "overlay-w");
+
+    // overlay-h
+    const overlayHRow = new Adw.ActionRow({ title: _("Overlay Height") });
+    group.add(overlayHRow);
+
+    const overlayHScale = Gtk.Scale.new_with_range(
+        Gtk.Orientation.HORIZONTAL,
+        0, 0.5, 0.01
+    )
+    overlayHScale.set_hexpand(true);
+    overlayHScale.set_draw_value(true);
+    overlayHScale.set_digits(2);
+
+    settings.bind(
+        "overlay-h",
+        overlayHScale.get_adjustment(),
+        "value",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    overlayHRow.add_suffix(overlayHScale);
+    overlayHRow.activatable_widget = overlayHScale;
+    addResetButton(overlayHRow, "overlay-h");
+
     // background-color
     const backgroundRow = new Adw.ActionRow({ title: _("Background Color") });
     group.add(backgroundRow);
 
     const backgroundOpacityScale = Gtk.Scale.new_with_range(
         Gtk.Orientation.HORIZONTAL,
-        0,
-        1.0,
-        0.05,
+        0, 1.0, 0.05
     );
     backgroundOpacityScale.set_hexpand(true);
     backgroundOpacityScale.set_draw_value(true);
