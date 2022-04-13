@@ -170,7 +170,7 @@ var overlay = class Overlay extends GObject.Object
      */
     update()
     {
-        // RAMog(dataRAM[0]);
+        // RAM;
         let stdoutRAM = ByteArray.toString(GLib.spawn_command_line_sync("cat /proc/meminfo")[1]);
         let dataRAM = (stdoutRAM.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
         
