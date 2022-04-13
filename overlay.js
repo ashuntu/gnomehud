@@ -235,28 +235,28 @@ var overlay = class Overlay extends GObject.Object
         let anchor = this._settings.get_int("anchor-corner");
         let x = this.monitor.x;
         let y = this.monitor.y;
-        let width = Math.ceil(this.monitor.height * this._settings.get_double("overlay-w"));
-        let height = Math.ceil(this.monitor.height * this._settings.get_double("overlay-h"));
+        let width = this._settings.get_int("overlay-w");
+        let height = this._settings.get_int("overlay-h");
 
         // Left corners
         if (anchor % 2 == 0)
         {
-            x += Math.ceil(this.monitor.height * this._settings.get_double("margin-h"));
+            x += this._settings.get_int("margin-h");
         }
         // Right corners
         else
         {
-            x += this.monitor.width - width - Math.ceil(this.monitor.height * this._settings.get_double("margin-h"));
+            x += this.monitor.width - width - this._settings.get_int("margin-h");
         }
         // Top corners
         if (anchor <= 1)
         {
-            y += Math.ceil(this.monitor.height * this._settings.get_double("margin-v"));
+            y += this._settings.get_int("margin-v");
         }
         // Bottom corners
         else
         {
-            y += this.monitor.height - height - Math.ceil(this.monitor.height * this._settings.get_double("margin-v"));
+            y += this.monitor.height - height - this._settings.get_int("margin-v");
         }
 
         return { x: x, y: y, width: width, height: height };

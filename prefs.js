@@ -96,7 +96,7 @@ function fillPreferencesWindow(window)
     addResetButton(osdRow, "show-osd");
 
     // update-delay
-    const delayRow = new Adw.ActionRow({ title: _("Update Delay (ms)") });
+    const delayRow = new Adw.ActionRow({ title: _("Update Interval (ms)") });
     group.add(delayRow);
 
     const delayRange = Gtk.SpinButton.new_with_range(
@@ -156,95 +156,79 @@ function fillPreferencesWindow(window)
     addResetButton(monitorRow, "default-monitor");
 
     // margin-h
-    const marginHRow = new Adw.ActionRow({ title: _("Margin (horizontal)") });
+    const marginHRow = new Adw.ActionRow({ title: _("Horizontal Margin (px)") });
     group.add(marginHRow);
 
-    const marginHScale = Gtk.Scale.new_with_range(
-        Gtk.Orientation.HORIZONTAL,
-        0, 0.5, 0.01
-    )
-    marginHScale.set_hexpand(true);
-    marginHScale.set_draw_value(true);
-    marginHScale.set_digits(2);
+    const marginHSpin = Gtk.SpinButton.new_with_range(
+        0, 10000, 10
+    );
 
     settings.bind(
         "margin-h",
-        marginHScale.get_adjustment(),
+        marginHSpin,
         "value",
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    marginHRow.add_suffix(marginHScale);
-    marginHRow.activatable_widget = marginHScale;
+    marginHRow.add_suffix(marginHSpin);
+    marginHRow.activatable_widget = marginHSpin;
     addResetButton(marginHRow, "margin-h");
 
     // margin-v
-    const marginVRow = new Adw.ActionRow({ title: _("Margin (vertical)") });
+    const marginVRow = new Adw.ActionRow({ title: _("Vertical Margin (px)") });
     group.add(marginVRow);
 
-    const marginVScale = Gtk.Scale.new_with_range(
-        Gtk.Orientation.HORIZONTAL,
-        0, 0.5, 0.01
-    )
-    marginVScale.set_hexpand(true);
-    marginVScale.set_draw_value(true);
-    marginVScale.set_digits(2);
+    const marginVSpin = Gtk.SpinButton.new_with_range(
+        0, 10000, 10
+    );
 
     settings.bind(
         "margin-v",
-        marginVScale.get_adjustment(),
+        marginVSpin,
         "value",
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    marginVRow.add_suffix(marginVScale);
-    marginVRow.activatable_widget = marginVScale;
+    marginVRow.add_suffix(marginVSpin);
+    marginVRow.activatable_widget = marginVSpin;
     addResetButton(marginVRow, "margin-v");
 
     // overlay-w
-    const overlayWRow = new Adw.ActionRow({ title: _("Overlay Width") });
+    const overlayWRow = new Adw.ActionRow({ title: _("Overlay Width (px)") });
     group.add(overlayWRow);
 
-    const overlayWScale = Gtk.Scale.new_with_range(
-        Gtk.Orientation.HORIZONTAL,
-        0, 0.5, 0.01
-    )
-    overlayWScale.set_hexpand(true);
-    overlayWScale.set_draw_value(true);
-    overlayWScale.set_digits(2);
+    const overlayWSpin = Gtk.SpinButton.new_with_range(
+        0, 10000, 10
+    );
 
     settings.bind(
         "overlay-w",
-        overlayWScale.get_adjustment(),
+        overlayWSpin,
         "value",
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    overlayWRow.add_suffix(overlayWScale);
-    overlayWRow.activatable_widget = overlayWScale;
+    overlayWRow.add_suffix(overlayWSpin);
+    overlayWRow.activatable_widget = overlayWSpin;
     addResetButton(overlayWRow, "overlay-w");
 
     // overlay-h
-    const overlayHRow = new Adw.ActionRow({ title: _("Overlay Height") });
+    const overlayHRow = new Adw.ActionRow({ title: _("Overlay Height (px)") });
     group.add(overlayHRow);
 
-    const overlayHScale = Gtk.Scale.new_with_range(
-        Gtk.Orientation.HORIZONTAL,
-        0, 0.5, 0.01
-    )
-    overlayHScale.set_hexpand(true);
-    overlayHScale.set_draw_value(true);
-    overlayHScale.set_digits(2);
+    const overlayHSpin = Gtk.SpinButton.new_with_range(
+        0, 10000, 10
+    );
 
     settings.bind(
         "overlay-h",
-        overlayHScale.get_adjustment(),
+        overlayHSpin,
         "value",
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    overlayHRow.add_suffix(overlayHScale);
-    overlayHRow.activatable_widget = overlayHScale;
+    overlayHRow.add_suffix(overlayHSpin);
+    overlayHRow.activatable_widget = overlayHSpin;
     addResetButton(overlayHRow, "overlay-h");
 
     // background-color
@@ -362,8 +346,14 @@ function fillPreferencesWindow(window)
     // disable
     const disableButton = Gtk.Button.new_with_label(_("Disable Extension"));
     disableButton.connect("clicked", () => disableButtonActivate());
-    disableButton.set_margin_bottom(20);
+    disableButton.set_margin_bottom(10);
     dangerGroup.add(disableButton);
+
+    // disable
+    const uninstallBUtton = Gtk.Button.new_with_label(_("Uninstall Extension"));
+    uninstallBUtton.connect("clicked", () => uninstallButtonActivate());
+    uninstallBUtton.set_margin_bottom(20);
+    dangerGroup.add(uninstallBUtton);
 
     // info
     const infoLabel = Gtk.Label.new(_(`Source: ${Me.metadata.url}`));
@@ -410,6 +400,15 @@ function disableButtonActivate()
 {
     log(_(`${Me.metadata.uuid}: User disabling extension`));
     GLib.spawn_command_line_async(`gnome-extensions disable ${Me.metadata.uuid}`);
+}
+
+/**
+ * Called when the uninstall button is pressed. Uninstalls (removes) the extension.
+ */
+function uninstallButtonActivate()
+{
+    log(_(`${Me.metadata.uuid}: User uninstalling extension`));
+    GLib.spawn_command_line_async(`gnome-extensions uninstall ${Me.metadata.uuid}`);
 }
 
 /**
