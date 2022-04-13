@@ -170,7 +170,7 @@ var overlay = class Overlay extends GObject.Object
     {
         // RAM
         let stdoutRAM = ByteArray.toString(GLib.spawn_command_line_sync("free")[1]);
-        let dataRAM = stdoutRAM.match(/^\d+|\d+\b|\d+(?=\w)/g); // array of numbers in stdout
+        let dataRAM = (stdoutRAM.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
 
         this.ram.total = dataRAM[0];
         this.ram.used = dataRAM[1];
@@ -180,7 +180,7 @@ var overlay = class Overlay extends GObject.Object
 
         // CPU
         let stdoutCPU = ByteArray.toString(GLib.spawn_command_line_sync("head -n1 /proc/stat")[1]);
-        let dataCPU = (stdoutCPU.split(" ")).filter((x) => { return x != "" && !isNaN(x) })
+        let dataCPU = (stdoutCPU.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
         
         this.cpu.oldTotal = this.cpu.total;
         this.cpu.oldUsed = this.cpu.used;
