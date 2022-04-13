@@ -298,10 +298,8 @@ var overlay = class Overlay extends GObject.Object
         rgba.parse(this._settings.get_string("foreground-color"));
         let str = this.getRGBAString(rgba, this._settings.get_double("foreground-opacity"));
 
-        
         if (this.ramLabel)
         {
-            log(str);
             this.ramLabel.set_style(`color: ${str}`);
         }
         
