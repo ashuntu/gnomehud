@@ -1,8 +1,8 @@
-# GNOME HUD (WIP)
+# GNOME HUD <sup>WIP</sup>
 
 <img src="./images/screenshot.png" height="200px">
 
-GNOME Shell extension for displaying system information like CPU usage, RAM usage, GPU usage, and FPS.
+[GNOME Shell](https://www.gnome.org/) extension for displaying system information like CPU usage, RAM usage, GPU usage, and FPS.
 
 ## Installation
 
