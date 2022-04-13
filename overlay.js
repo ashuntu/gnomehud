@@ -1,11 +1,12 @@
 "use strict";
 
-const { Clutter, St, Gdk, GObject, Gio, GLib, Shell, Meta } = imports.gi;
+const { Clutter, St, Gdk, GObject, Gio, GLib, Gtk, Shell, Meta } = imports.gi;
 
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
 const Main = imports.ui.main;
+const BackgroundMenu = imports.ui.backgroundMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
@@ -135,8 +136,8 @@ var overlay = class Overlay extends GObject.Object
 
             this.updateBackground();
             this.updateForeground();
-            
-            Main.layoutManager.addTopChrome(this.overlay, null);
+
+            Main.uiGroup.add_actor(this.overlay);
 
             if (!this._eventLoop)
             {
