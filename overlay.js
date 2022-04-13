@@ -139,6 +139,8 @@ var overlay = class Overlay extends GObject.Object
 
             Main.uiGroup.add_actor(this.overlay);
 
+            this.update();
+
             if (!this._eventLoop)
             {
                 this._eventLoop = Mainloop.timeout_add(
@@ -310,6 +312,13 @@ var overlay = class Overlay extends GObject.Object
         }
     }
 
+    /**
+     * Gets the CSS RGBA string from a given Gdk.RGBA and opacity value.
+     * 
+     * @param {Gtk.RGBA} rgba 
+     * @param {double} opacity 
+     * @returns {string}
+     */
     getRGBAString(rgba, opacity)
     {
         return `rgba(${rgba.red * 255}, ${rgba.green * 255}, ${rgba.blue * 255}, ${opacity});`;
