@@ -170,12 +170,13 @@ var overlay = class Overlay extends GObject.Object
      */
     update()
     {
-        // RAM
-        let stdoutRAM = ByteArray.toString(GLib.spawn_command_line_sync("free")[1]);
+        // RAMog(dataRAM[0]);
+        let stdoutRAM = ByteArray.toString(GLib.spawn_command_line_sync("cat /proc/meminfo")[1]);
         let dataRAM = (stdoutRAM.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
-
-        this.ram.total = dataRAM[0];
-        this.ram.used = dataRAM[1];
+        
+        this.ram.total = dataRAM[0]; // MemTotal
+        this.ram.free = dataRAM[2]; // MemAvailable
+        this.ram.used = this.ram.total - this.ram.free;
         let ramPerc = (this.ram.used / this.ram.total) * 100;
 
         this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
