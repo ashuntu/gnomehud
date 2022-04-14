@@ -12,6 +12,8 @@ const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const Battery = Me.imports.battery;
+const Memory = Me.imports.memory;
+const Processor = Me.imports.processor;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -45,23 +47,6 @@ var overlay = class Overlay extends GObject.Object
         this.ramLabel = null;
         this.cpuLabel = null;
         this.batteryLabel = null;
-
-        // /proc/meminfo
-        this.ram = {
-            total: 0,               // total physical RAM KB
-            used: 0,                // used RAM KB
-            free: 0                 // available RAM KB
-        };
-
-        // /proc/stat
-        this.cpu = {
-            total: 0,               // total CPU time
-            used: 0,                // used CPU time
-            free: 0,                // idle CPU time
-            oldTotal: 0,            // prev total CPU time
-            oldUsed: 0,             // prev used CPU time
-            oldFree: 0              // prev idle CPU time
-        };
     }
 
     /**
@@ -186,34 +171,17 @@ var overlay = class Overlay extends GObject.Object
         let updateStart = new GLib.DateTime();
 
         // RAM;
-        let file = Gio.File.new_for_path("/proc/meminfo");
-        let data = ByteArray.toString(file.load_contents(null)[1]);
-        let dataRAM = (data.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
-        
-        this.ram.total = dataRAM[0]; // MemTotal
-        this.ram.free = dataRAM[2]; // MemAvailable
-        this.ram.used = this.ram.total - this.ram.free;
-        let ramPerc = (this.ram.used / this.ram.total) * 100;
+        let ram = Memory.getRAM();
+        let ramPerc = (ram.used / ram.total) * 100;
 
         this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
 
         // CPU
-        file = Gio.File.new_for_path("/proc/stat");
-        data = ByteArray.toString(file.load_contents(null)[1]);
-        let dataCPU = (data.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
+        let cpu = Processor.getCPU();
 
-        this.cpu.oldTotal = this.cpu.total;
-        this.cpu.oldUsed = this.cpu.used;
-        this.cpu.oldFree = this.cpu.free;
-
-        this.cpu.total = 0;
-        for (let i = 0; i < 10; i++) this.cpu.total += parseInt(dataCPU[i]);
-        this.cpu.free = parseInt(dataCPU[3]);
-        this.cpu.used = this.cpu.total - this.cpu.free;
-
-        let cpuDelta = this.cpu.total - this.cpu.oldTotal;
-        let cpuUsed = this.cpu.used - this.cpu.oldUsed;
-        let cpuPerc = (cpuUsed / cpuDelta) * 100;
+        let cpuD = cpu.total - cpu.oldTotal;
+        let cpuUsedD = cpu.used - cpu.oldUsed;
+        let cpuPerc = (cpuUsedD / cpuD) * 100;
 
         this.cpuLabel.set_text(_(`CPU ${cpuPerc.toFixed(2)}%`));
 
@@ -221,7 +189,7 @@ var overlay = class Overlay extends GObject.Object
         let battery = Battery.getBattery();
         this.batteryLabel.set_text(_(`BAT ${battery.capacity}%`));
 
-        let updateEnd = new GLib.DateTime();
+        // let updateEnd = new GLib.DateTime();
         // let time = updateEnd.difference(updateStart);
         // this.times += time;
         // this.n++;

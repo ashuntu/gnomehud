@@ -1,20 +1,10 @@
 "use strict";
 
-const { GObject, Gio, GLib, Gtk, Shell, Meta } = imports.gi;
+const { Gio, GLib } = imports.gi;
 
-const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
 const Main = imports.ui.main;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const ExtensionManager = Main.extensionManager;
-const Me = ExtensionUtils.getCurrentExtension();
-
-const Gettext = imports.gettext;
-const Domain = Gettext.domain(Me.metadata.uuid);
-const _ = Domain.gettext;
-const ngettext = Domain.ngettext;
 
 const BATT_DIR = "/sys/class/power_supply/BAT0/";
 
@@ -24,7 +14,7 @@ const STATUS = {
     FULL: "FULL"
 };
 
-let battery = {
+const battery = {
     capacity: 0,                // charge %
     energyNow: 0,               // Wh of battery
     energyFull: 0,              // full Wh

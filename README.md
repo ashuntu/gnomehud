@@ -70,7 +70,7 @@ journalctl -f -o cat /usr/bin/gjs
 ### Pack Extension
 
 ```
-gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={indicator.js,overlay.js}
+gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={*.js}
 ```
 
 ### Compile (Preferences) Schemas
