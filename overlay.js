@@ -6,11 +6,12 @@ const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
 const Main = imports.ui.main;
-const BackgroundMenu = imports.ui.backgroundMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
+
+const Battery = Me.imports.battery;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -37,23 +38,29 @@ var overlay = class Overlay extends GObject.Object
         this._extension = extension;
         this._settings = extension.settings;
 
+        this.times = 0;
+        this.n = 0;
+
         this.overlay = null;
         this.ramLabel = null;
         this.cpuLabel = null;
+        this.batteryLabel = null;
 
+        // /proc/meminfo
         this.ram = {
-            total: 0,
-            used: 0,
-            free: 0
+            total: 0,               // total physical RAM KB
+            used: 0,                // used RAM KB
+            free: 0                 // available RAM KB
         };
 
+        // /proc/stat
         this.cpu = {
-            total: 0,
-            used: 0,
-            free: 0,
-            oldTotal: 0,
-            oldUsed: 0,
-            oldFree: 0
+            total: 0,               // total CPU time
+            used: 0,                // used CPU time
+            free: 0,                // idle CPU time
+            oldTotal: 0,            // prev total CPU time
+            oldUsed: 0,             // prev used CPU time
+            oldFree: 0              // prev idle CPU time
         };
     }
 
@@ -134,6 +141,12 @@ var overlay = class Overlay extends GObject.Object
             this.cpuLabel.set_position(25, 75);
             this.overlay.add_child(this.cpuLabel);
 
+            // Battery label
+            this.batteryLabel = new St.Label();
+            this.batteryLabel.set_text(_("BAT 0%"));
+            this.batteryLabel.set_position(25, 125);
+            this.overlay.add_child(this.batteryLabel);
+
             this.updateBackground();
             this.updateForeground();
 
@@ -170,9 +183,12 @@ var overlay = class Overlay extends GObject.Object
      */
     update()
     {
+        let updateStart = new GLib.DateTime();
+
         // RAM;
-        let stdoutRAM = ByteArray.toString(GLib.spawn_command_line_sync("cat /proc/meminfo")[1]);
-        let dataRAM = (stdoutRAM.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
+        let file = Gio.File.new_for_path("/proc/meminfo");
+        let data = ByteArray.toString(file.load_contents(null)[1]);
+        let dataRAM = (data.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
         
         this.ram.total = dataRAM[0]; // MemTotal
         this.ram.free = dataRAM[2]; // MemAvailable
@@ -182,15 +198,16 @@ var overlay = class Overlay extends GObject.Object
         this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
 
         // CPU
-        let stdoutCPU = ByteArray.toString(GLib.spawn_command_line_sync("head -n1 /proc/stat")[1]);
-        let dataCPU = (stdoutCPU.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
-        
+        file = Gio.File.new_for_path("/proc/stat");
+        data = ByteArray.toString(file.load_contents(null)[1]);
+        let dataCPU = (data.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
+
         this.cpu.oldTotal = this.cpu.total;
         this.cpu.oldUsed = this.cpu.used;
         this.cpu.oldFree = this.cpu.free;
 
         this.cpu.total = 0;
-        dataCPU.forEach((x) => { this.cpu.total += parseInt(x); });
+        for (let i = 0; i < 10; i++) this.cpu.total += parseInt(dataCPU[i]);
         this.cpu.free = parseInt(dataCPU[3]);
         this.cpu.used = this.cpu.total - this.cpu.free;
 
@@ -199,6 +216,16 @@ var overlay = class Overlay extends GObject.Object
         let cpuPerc = (cpuUsed / cpuDelta) * 100;
 
         this.cpuLabel.set_text(_(`CPU ${cpuPerc.toFixed(2)}%`));
+
+        // Battery
+        let battery = Battery.getBattery();
+        this.batteryLabel.set_text(_(`BAT ${battery.capacity}%`));
+
+        let updateEnd = new GLib.DateTime();
+        // let time = updateEnd.difference(updateStart);
+        // this.times += time;
+        // this.n++;
+        // log(this.times / this.n);
 
         return true;
     }
@@ -302,15 +329,9 @@ var overlay = class Overlay extends GObject.Object
         rgba.parse(this._settings.get_string("foreground-color"));
         let str = this.getRGBAString(rgba, this._settings.get_double("foreground-opacity"));
 
-        if (this.ramLabel)
-        {
-            this.ramLabel.set_style(`color: ${str}`);
-        }
-        
-        if (this.cpuLabel)
-        {
-            this.cpuLabel.set_style(`color: ${str}`);
-        }
+        this.overlay.get_children().forEach((x) =>
+            x.set_style(`color: ${str}`)
+        );
     }
 
     /**
