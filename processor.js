@@ -24,8 +24,8 @@ var getCPU = () =>
 {
     let file = Gio.File.new_for_path(PROC_DIR);
     let data = ByteArray.toString(file.load_contents(null)[1]);
-    let dataCPU = (data.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
-        
+    let dataCPU = data.match(/\d+/g)
+
     cpu.oldTotal = cpu.total;
     cpu.oldUsed = cpu.used;
     cpu.oldFree = cpu.free;

@@ -4,8 +4,6 @@ const { Gio, GLib } = imports.gi;
 
 const ByteArray = imports.byteArray;
 
-const Main = imports.ui.main;
-
 const BATT_DIR = "/sys/class/power_supply/BAT0/";
 
 const STATUS = {
@@ -19,7 +17,7 @@ const battery = {
     energyNow: 0,               // Wh of battery
     energyFull: 0,              // full Wh
     energyFullDesign: 0,        // full design Wh
-    status: STATUS.FULL,    // charging, discharging
+    status: STATUS.FULL,        // charging, discharging
     technology: "None",         // Li-poly, etc
     voltageNow: 0,              // current voltage
 };

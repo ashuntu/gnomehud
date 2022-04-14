@@ -21,10 +21,10 @@ var getRAM = () =>
 {
     let file = Gio.File.new_for_path(MEM_DIR);
     let data = ByteArray.toString(file.load_contents(null)[1]);
-    let dataRAM = (data.split(" ")).filter((x) => { return x != "" && !isNaN(x) });
-        
-    ram.total = dataRAM[0]; // MemTotal
-    ram.free = dataRAM[2]; // MemAvailable
+    let dataRAM = data.match(/\d+/g);
+
+    ram.total = parseInt(dataRAM[0]); // MemTotal
+    ram.free = parseInt(dataRAM[2]); // MemAvailable
     ram.used = ram.total - ram.free;
 
     return ram;
