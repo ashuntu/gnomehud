@@ -44,7 +44,7 @@ var overlay = class Overlay extends GObject.Object
         this.ram = {
             total: 0,
             used: 0,
-            free: 0,
+            free: 0
         };
 
         this.cpu = {
@@ -53,7 +53,7 @@ var overlay = class Overlay extends GObject.Object
             free: 0,
             oldTotal: 0,
             oldUsed: 0,
-            oldFree: 0,
+            oldFree: 0
         };
     }
 
@@ -67,7 +67,7 @@ var overlay = class Overlay extends GObject.Object
             this._settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.ALL,
-            () => this.toggleOverlay(),
+            () => this.toggleOverlay()
         );
 
         this._settings.connect("changed::show-overlay", () => this.toggle());
@@ -107,7 +107,7 @@ var overlay = class Overlay extends GObject.Object
                 0, 
                 icon, 
                 _(`Overlay toggled\n\nUse ${this._settings.get_strv("kb-toggle-overlay")[0]} to toggle`), 
-                null,
+                null
             );
         }
 
@@ -145,7 +145,7 @@ var overlay = class Overlay extends GObject.Object
             {
                 this._eventLoop = Mainloop.timeout_add(
                     this._settings.get_int("update-delay"), 
-                    () => this.update(),
+                    () => this.update()
                 );
             }
         }
@@ -217,7 +217,7 @@ var overlay = class Overlay extends GObject.Object
 
         this._eventLoop = Mainloop.timeout_add(
             this._settings.get_int("update-delay"), 
-            () => this.update(),
+            () => this.update()
         );
     }
 

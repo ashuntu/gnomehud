@@ -41,14 +41,14 @@ function fillPreferencesWindow(window)
 
     const indicatorToggle = new Gtk.Switch({
         active: settings.get_boolean("show-indicator"),
-        valign: Gtk.Align.CENTER,
+        valign: Gtk.Align.CENTER
     });
 
     settings.bind(
         "show-indicator",
         indicatorToggle,
         "active",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     indicatorRow.add_suffix(indicatorToggle);
@@ -61,14 +61,14 @@ function fillPreferencesWindow(window)
 
     const overlayToggle = new Gtk.Switch({
         active: settings.get_boolean("show-overlay"),
-        valign: Gtk.Align.CENTER,
+        valign: Gtk.Align.CENTER
     });
 
     settings.bind(
         "show-overlay",
         overlayToggle,
         "active",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     overlayRow.add_suffix(overlayToggle);
@@ -81,14 +81,14 @@ function fillPreferencesWindow(window)
 
     const osdToggle = new Gtk.Switch({
         active: settings.get_boolean("show-osd"),
-        valign: Gtk.Align.CENTER,
+        valign: Gtk.Align.CENTER
     });
 
     settings.bind(
         "show-osd",
         osdToggle,
         "active",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     osdRow.add_suffix(osdToggle);
@@ -107,7 +107,7 @@ function fillPreferencesWindow(window)
         "update-delay",
         delayRange,
         "value",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     delayRow.add_suffix(delayRange);
@@ -122,14 +122,14 @@ function fillPreferencesWindow(window)
         _("Top-Left"),
         _("Top-Right"),
         _("Bottom-Left"),
-        _("Bottom-Right"),
+        _("Bottom-Right")
     ]);
 
     settings.bind(
         "anchor-corner",
         anchorSelector,
         "selected",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     anchorRow.add_suffix(anchorSelector);
@@ -148,7 +148,7 @@ function fillPreferencesWindow(window)
         "default-monitor",
         monitorSelector,
         "selected",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     monitorRow.add_suffix(monitorSelector);
@@ -247,7 +247,7 @@ function fillPreferencesWindow(window)
         "background-opacity",
         backgroundOpacityScale.get_adjustment(),
         "value",
-        Gio.SettingsBindFlags.DEFAULT,
+        Gio.SettingsBindFlags.DEFAULT
     );
 
     let rgbaB = new Gdk.RGBA();
@@ -257,7 +257,7 @@ function fillPreferencesWindow(window)
     backgroundButton.set_rgba(rgbaB);
     backgroundButton.connect(
         "color-set", 
-        () => colorUpdated("background-color", backgroundButton),
+        () => colorUpdated("background-color", backgroundButton)
     );
 
     backgroundRow.add_suffix(backgroundOpacityScale);
@@ -280,7 +280,7 @@ function fillPreferencesWindow(window)
         Gtk.Orientation.HORIZONTAL,
         0,
         1.0,
-        0.05,
+        0.05
     );
     foregroundOpacityScale.set_hexpand(true);
     foregroundOpacityScale.set_draw_value(true);
@@ -300,7 +300,7 @@ function fillPreferencesWindow(window)
     foregroundButton.set_rgba(rgbaF);
     foregroundButton.connect(
         "color-set", 
-        () => colorUpdated("foreground-color", foregroundButton),
+        () => colorUpdated("foreground-color", foregroundButton)
     );
 
     foregroundRow.add_suffix(foregroundOpacityScale);
@@ -352,7 +352,7 @@ function fillPreferencesWindow(window)
     // disable
     const uninstallBUtton = Gtk.Button.new_with_label(_("Uninstall Extension"));
     uninstallBUtton.connect("clicked", () => uninstallButtonActivate());
-    uninstallBUtton.set_margin_bottom(20);
+    uninstallBUtton.set_margin_bottom(50);
     dangerGroup.add(uninstallBUtton);
 
     // info

@@ -45,7 +45,7 @@ var indicator = class Indicator extends GObject.Object
         this._button = new PanelMenu.Button(0.5, Me.metadata.uuid);
         let icon = new St.Icon({
             gicon: new Gio.ThemedIcon({ name: "utilities-system-monitor-symbolic" }),
-            style_class: "system-status-icon",
+            style_class: "system-status-icon"
         });
         this._button.add_child(icon);
 
@@ -53,7 +53,7 @@ var indicator = class Indicator extends GObject.Object
             "show-indicator",
             this._button,
             "visible",
-            Gio.SettingsBindFlags.DEFAULT,
+            Gio.SettingsBindFlags.DEFAULT
         );
 
         Main.panel.addToStatusArea(Me.metadata.uuid, this._button);
@@ -83,7 +83,7 @@ var indicator = class Indicator extends GObject.Object
             "show-overlay",
             switchItem._switch,
             "state",
-            Gio.SettingsBindFlags.DEFAULT,
+            Gio.SettingsBindFlags.DEFAULT
         );
 
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -94,7 +94,7 @@ var indicator = class Indicator extends GObject.Object
         this._button.menu.addMenuItem(settingsItem);
 
         // Quit button
-        let disableItem = new PopupMenu.PopupMenuItem(_("Disable"));
+        let disableItem = new PopupMenu.PopupMenuItem(_("Disable Extension"));
         disableItem.connect("activate", this.disableButtonActivate.bind(this));
         this._button.menu.addMenuItem(disableItem);
     }
