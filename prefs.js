@@ -27,9 +27,25 @@ function init()
  */
 function fillPreferencesWindow(window)
 {
-    const page = new Adw.PreferencesPage();
-    const group = new Adw.PreferencesGroup({ title: _("Settings") });
-    page.add(group);
+    window.set_search_enabled(true);
+    window.set_title("GNOME HUD");
+    window.set_icon_name(`${settings.get_string("default-icon")}-symbolic`);
+
+    addGeneralPage(window);
+    addStylesPage(window);
+    addMonitorsPage(window);
+}
+
+function addGeneralPage(window)
+{
+    const generalPage = new Adw.PreferencesPage({
+        icon_name: `preferences-system-symbolic`,
+        title: _("General")
+    });
+    window.add(generalPage);
+
+    const group = new Adw.PreferencesGroup();
+    generalPage.add(group);
 
     // show-indicator
     const indicatorRow = new Adw.ActionRow({ title: _("Show Extension Indicator") });
@@ -114,6 +130,63 @@ function fillPreferencesWindow(window)
     delayRow.activatable_widget = delayRange;
     addResetButton(delayRow, "update-delay");
 
+    // keybinds
+    const keybindGroup = new Adw.PreferencesGroup({ title: _("Keybinds") });
+    generalPage.add(keybindGroup);
+
+    const toggleKeybindRow = new Adw.ActionRow({ title: _("Toggle Overlay") });
+    keybindGroup.add(toggleKeybindRow);
+
+    const toggleKeybindText = new Gtk.Text()
+
+    let keybind = settings.get_strv("kb-toggle-overlay")[0];
+    toggleKeybindText.set_text(keybind);
+    toggleKeybindText.set_truncate_multiline(true);
+    toggleKeybindText.connect("changed", () => keybindUpdate(toggleKeybindText));
+
+    toggleKeybindRow.add_suffix(toggleKeybindText);
+    toggleKeybindRow.activatable_widget = toggleKeybindText;
+    addResetButton(toggleKeybindRow, "kb-toggle-overlay");
+
+    // danger zone!
+    const dangerGroup = new Adw.PreferencesGroup({ title: _("Danger Zone!") });
+    generalPage.add(dangerGroup);
+
+    // reset
+    const resetButton = Gtk.Button.new_with_label(_("Reset Settings"));
+    resetButton.connect("clicked", () => resetButtonActivate());
+    resetButton.set_margin_bottom(10);
+    dangerGroup.add(resetButton);
+
+    // disable
+    const disableButton = Gtk.Button.new_with_label(_("Disable Extension"));
+    disableButton.connect("clicked", () => disableButtonActivate());
+    disableButton.set_margin_bottom(10);
+    dangerGroup.add(disableButton);
+
+    // disable
+    const uninstallBUtton = Gtk.Button.new_with_label(_("Uninstall Extension"));
+    uninstallBUtton.connect("clicked", () => uninstallButtonActivate());
+    uninstallBUtton.set_margin_bottom(50);
+    dangerGroup.add(uninstallBUtton);
+
+    // info
+    const infoLabel = Gtk.Label.new(_(`Source: ${Me.metadata.url}`));
+    infoLabel.selectable = true;
+    dangerGroup.add(infoLabel);
+}
+
+function addStylesPage(window)
+{
+    const stylesPage = new Adw.PreferencesPage({
+        icon_name: `applications-graphics-symbolic`,
+        title: _("Styles")
+    });
+    window.add(stylesPage);
+
+    const group = new Adw.PreferencesGroup();
+    stylesPage.add(group);
+
     // anchor-corner
     const anchorRow = new Adw.ActionRow({ title: _("Anchor Corner" )});
     group.add(anchorRow);
@@ -137,7 +210,7 @@ function fillPreferencesWindow(window)
     addResetButton(anchorRow, "anchor-corner");
 
     // default-monitor
-    const monitorRow = new Adw.ActionRow({ title: _("Default Monitor")} );
+    const monitorRow = new Adw.ActionRow({ title: _("Default Display")} );
     group.add(monitorRow);
 
     const monitorSelector = Gtk.DropDown.new_from_strings([
@@ -314,53 +387,61 @@ function fillPreferencesWindow(window)
             foregroundButton.set_rgba(rgba);
         }
     );
+}
 
-    // keybinds
-    const keybindGroup = new Adw.PreferencesGroup({ title: _("Keybinds") });
-    page.add(keybindGroup);
+function addMonitorsPage(window)
+{
+    const monitorsPage = new Adw.PreferencesPage({
+        icon_name: `${settings.get_string("default-icon")}-symbolic`,
+        title: _("Monitors")
+    });
+    window.add(monitorsPage);
 
-    const toggleKeybindRow = new Adw.ActionRow({ title: _("Toggle Overlay") });
-    keybindGroup.add(toggleKeybindRow);
+    addMonitorGroup(monitorsPage, _("Memory (RAM)"), "memory");
+    addMonitorGroup(monitorsPage, _("Processor (CPU)"), "processor");
+    addMonitorGroup(monitorsPage, _("Battery"), "battery");
+    addMonitorGroup(monitorsPage, _("Network"), "network");
+    addMonitorGroup(monitorsPage, _("Disks"), "disks");
+}
 
-    const toggleKeybindText = new Gtk.Text()
+function addMonitorGroup(page, title, setting)
+{
+    const group = new Adw.PreferencesGroup({
+        title: _(title)
+    });
+    page.add(group);
 
-    let keybind = settings.get_strv("kb-toggle-overlay")[0];
-    toggleKeybindText.set_text(keybind);
-    toggleKeybindText.set_truncate_multiline(true);
-    toggleKeybindText.connect("changed", () => keybindUpdate(toggleKeybindText));
+    /// enabled
+    const enabledRow = new Adw.ActionRow({ title: _("Enabled") });
+    group.add(enabledRow);
 
-    toggleKeybindRow.add_suffix(toggleKeybindText);
-    toggleKeybindRow.activatable_widget = toggleKeybindText;
-    addResetButton(toggleKeybindRow, "kb-toggle-overlay");
+    const enabledSwitch = new Gtk.Switch({
+        valign: Gtk.Align.CENTER
+    })
+    enabledRow.add_suffix(enabledSwitch);
+    enabledRow.activatable_widget = enabledSwitch;
 
-    // danger zone!
-    const dangerGroup = new Adw.PreferencesGroup({ title: _("Danger Zone!") });
-    page.add(dangerGroup);
+    settings.bind(
+        `${setting}-enabled`,
+        enabledSwitch,
+        "active",
+        Gio.SettingsBindFlags.DEFAULT
+    );
 
-    // reset
-    const resetButton = Gtk.Button.new_with_label(_("Reset Settings"));
-    resetButton.connect("clicked", () => resetButtonActivate());
-    resetButton.set_margin_bottom(10);
-    dangerGroup.add(resetButton);
+    /// label
+    const labelRow = new Adw.ActionRow({ title: _("Label") });
+    group.add(labelRow);
 
-    // disable
-    const disableButton = Gtk.Button.new_with_label(_("Disable Extension"));
-    disableButton.connect("clicked", () => disableButtonActivate());
-    disableButton.set_margin_bottom(10);
-    dangerGroup.add(disableButton);
+    const labelText = new Gtk.Text();
+    labelRow.add_suffix(labelText);
+    labelRow.activatable_widget = labelText;
 
-    // disable
-    const uninstallBUtton = Gtk.Button.new_with_label(_("Uninstall Extension"));
-    uninstallBUtton.connect("clicked", () => uninstallButtonActivate());
-    uninstallBUtton.set_margin_bottom(50);
-    dangerGroup.add(uninstallBUtton);
-
-    // info
-    const infoLabel = Gtk.Label.new(_(`Source: ${Me.metadata.url}`));
-    infoLabel.selectable = true;
-    dangerGroup.add(infoLabel);
-
-    window.add(page);
+    settings.bind(
+        `${setting}-label`,
+        labelText,
+        "text",
+        Gio.SettingsBindFlags.DEFAULT
+    );
 }
 
 /**

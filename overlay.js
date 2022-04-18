@@ -1,6 +1,6 @@
 "use strict";
 
-const { Clutter, St, Gdk, GObject, Gio, GLib, Gtk, Shell, Meta } = imports.gi;
+const { St, Gdk, GObject, Gio, GLib, Shell, Meta } = imports.gi;
 
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
@@ -39,6 +39,7 @@ var overlay = class Overlay extends GObject.Object
 
         this._extension = extension;
         this._settings = extension.settings;
+        this._connections = [];
 
         this.times = 0;
         this.n = 0;
@@ -62,19 +63,29 @@ var overlay = class Overlay extends GObject.Object
             () => this.toggleOverlay()
         );
 
-        this._settings.connect("changed::show-overlay", () => this.toggle());
-        this._settings.connect("changed::update-delay", () => this.delayChanged());
-        this._settings.connect("changed::anchor-corner", () => this.geometryChanged());
-        this._settings.connect("changed::default-monitor", () => this.geometryChanged());
-        this._settings.connect("changed::margin-h", () => this.geometryChanged());
-        this._settings.connect("changed::margin-v", () => this.geometryChanged());
-        this._settings.connect("changed::overlay-w", () => this.geometryChanged());
-        this._settings.connect("changed::overlay-h", () => this.geometryChanged());
-        this._settings.connect("changed::background-opacity", () => this.updateBackground());
-        this._settings.connect("changed::foreground-opacity", () => this.updateForeground());
-        this._settings.connect("changed::background-color", () => this.updateBackground());
-        this._settings.connect("changed::foreground-color", () => this.updateForeground());
         Main.layoutManager.connect("monitors-changed", () => this.geometryChanged());
+
+        let settingsConnections = {
+            "changed::show-overlay": this.toggle,
+            "changed::update-delay": this.delayChanged,
+            "changed::anchor-corner": this.geometryChanged,
+            "changed::default-monitor": this.geometryChanged,
+            "changed::margin-h": this.geometryChanged,
+            "changed::margin-v": this.geometryChanged,
+            "changed::overlay-w": this.geometryChanged,
+            "changed::overlay-h": this.geometryChanged,
+            "changed::background-opacity": this.updateBackground,
+            "changed::foreground-opacity": this.updateForeground,
+            "changed::background-color": this.updateBackground,
+            "changed::foreground-color": this.updateForeground
+        };
+
+        for (let event in settingsConnections)
+        {
+            this._connections.push(
+                this._settings.connect(event, settingsConnections[event].bind(this))
+            );
+        }
     }
 
     /**
@@ -82,7 +93,8 @@ var overlay = class Overlay extends GObject.Object
      */
     toggleOverlay()
     {
-        this._settings.set_boolean("show-overlay", !this._settings.get_boolean("show-overlay"));
+        let toggled = !this._settings.get_boolean("show-overlay");
+        this._settings.set_boolean("show-overlay", toggled);
     }
 
     /**
@@ -113,24 +125,40 @@ var overlay = class Overlay extends GObject.Object
             this.overlay.set_position(geo.x, geo.y);
             this.overlay.set_size(geo.width, geo.height);
             this.overlay.add_style_class_name("overlay");
+            this.overlay.set_style(`font-size: ${this._settings.get_int("font-size")}px`);
+
+            let x = 25;
+            let y = 25;
 
             // RAM label
-            this.ramLabel = new St.Label();
-            this.ramLabel.set_text(_("RAM 0.00%"));
-            this.ramLabel.set_position(25, 25);
-            this.overlay.add_child(this.ramLabel);
+            if (this._settings.get_boolean("memory-enabled"))
+            {
+                this.ramLabel = new St.Label();
+                this.ramLabel.set_text(_("RAM 0.00%"));
+                this.ramLabel.set_position(x, y);
+                this.overlay.add_child(this.ramLabel);
+                y += 50;
+            }
 
             // CPU label
-            this.cpuLabel = new St.Label();
-            this.cpuLabel.set_text(_("CPU 0.00%"));
-            this.cpuLabel.set_position(25, 75);
-            this.overlay.add_child(this.cpuLabel);
+            if (this._settings.get_boolean("processor-enabled"))
+            {
+                this.cpuLabel = new St.Label();
+                this.cpuLabel.set_text(_("CPU 0.00%"));
+                this.cpuLabel.set_position(x, y);
+                this.overlay.add_child(this.cpuLabel);
+                y += 50;
+            }
 
             // Battery label
-            this.batteryLabel = new St.Label();
-            this.batteryLabel.set_text(_("BAT 0%"));
-            this.batteryLabel.set_position(25, 125);
-            this.overlay.add_child(this.batteryLabel);
+            if (this._settings.get_boolean("battery-enabled"))
+            {
+                this.batteryLabel = new St.Label();
+                this.batteryLabel.set_text(_("BAT 0%"));
+                this.batteryLabel.set_position(x, y);
+                this.overlay.add_child(this.batteryLabel);
+                y += 50;
+            }
 
             this.updateBackground();
             this.updateForeground();
@@ -170,7 +198,7 @@ var overlay = class Overlay extends GObject.Object
     {
         let updateStart = new GLib.DateTime();
 
-        // RAM;
+        // RAM
         let ram = Memory.getRAM();
         let ramPerc = (ram.used / ram.total) * 100;
 
@@ -305,7 +333,7 @@ var overlay = class Overlay extends GObject.Object
     /**
      * Gets the CSS RGBA string from a given Gdk.RGBA and opacity value.
      * 
-     * @param {Gtk.RGBA} rgba 
+     * @param {Gdk.RGBA} rgba 
      * @param {double} opacity 
      * @returns {string}
      */
@@ -320,6 +348,11 @@ var overlay = class Overlay extends GObject.Object
     destroy()
     {
         Main.wm.removeKeybinding("kb-toggle-overlay");
+
+        for (let event in this._connections)
+        {
+            this._settings.disconnect(event);
+        }
 
         if (this.overlay) this.overlay.destroy();
         this.overlay = null;

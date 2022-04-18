@@ -2,7 +2,8 @@
 <schemalist>
     <schema id="org.gnome.shell.extensions.gnomehud" path="/org/gnome/shell/extensions/gnomehud/">
         <!-- See also: https://docs.gtk.org/glib/gvariant-format-strings.html -->
-        <!-- SETTINGS -->
+
+        <!-- GENERAL -->
         <key name="show-indicator" type="b">
             <default>true</default>
         </key>
@@ -15,6 +16,8 @@
         <key name="update-delay" type="i">
             <default>1000</default>
         </key>
+
+        <!-- STYLES -->
         <key name="default-monitor" type="i">
             <default>0</default>
         </key>
@@ -49,6 +52,46 @@
         <key name="default-icon" type="s">
             <default>"utilities-system-monitor"</default>
         </key>
+        <key name="font-size" type="i">
+            <default>16</default>
+        </key>
+
+        <!-- MONITORS -->
+        <key name="memory-enabled" type="b">
+            <default>true</default>
+        </key>
+        <key name="memory-label" type="s">
+            <default>"RAM"</default>
+        </key>
+
+        <key name="processor-enabled" type="b">
+            <default>true</default>
+        </key>
+        <key name="processor-label" type="s">
+            <default>"CPU"</default>
+        </key>
+
+        <key name="battery-enabled" type="b">
+            <default>true</default>
+        </key>
+        <key name="battery-label" type="s">
+            <default>"BAT"</default>
+        </key>
+
+        <key name="network-enabled" type="b">
+            <default>true</default>
+        </key>
+        <key name="network-label" type="s">
+            <default>"NET"</default>
+        </key>
+
+        <key name="disks-enabled" type="b">
+            <default>true</default>
+        </key>
+        <key name="disks-label" type="s">
+            <default>"DSK"</default>
+        </key>
+
         <!-- KEYBINDS -->
         <key name="kb-toggle-overlay" type="as">
             <default>["&lt;Super&gt;&lt;Alt&gt;g"]</default>
