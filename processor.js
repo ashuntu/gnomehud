@@ -20,20 +20,37 @@ const cpu = {
  * 
  * @returns {cpu} CPU info object
  */
-var getCPU = () =>
+var getCPU = async () =>
 {
-    let file = Gio.File.new_for_path(PROC_DIR);
-    let data = ByteArray.toString(file.load_contents(null)[1]);
-    let dataCPU = data.match(/\d+/g);
+    Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
 
-    cpu.oldTotal = cpu.total;
-    cpu.oldUsed = cpu.used;
-    cpu.oldFree = cpu.free;
+    // file.load_contents_async(null, (file, result) =>
+    // {
+    //     data = ByteArray.toString(file.load_contents_finish(result)[1]);
+    // })
 
-    cpu.total = 0;
-    for (let i = 0; i < 10; i++) cpu.total += parseInt(dataCPU[i]);
-    cpu.free = parseInt(dataCPU[3]);
-    cpu.used = cpu.total - cpu.free;
+    try
+    {
+        const file = Gio.File.new_for_path(PROC_DIR);
+        const contents = await file.load_contents_async(null);
+        const data = ByteArray.toString(contents[0]);
 
+        const dataCPU = data.match(/\d+/g);
+
+        cpu.oldTotal = cpu.total;
+        cpu.oldUsed = cpu.used;
+        cpu.oldFree = cpu.free;
+    
+        cpu.total = 0;
+        for (let i = 0; i < 10; i++) cpu.total += parseInt(dataCPU[i]);
+        cpu.free = parseInt(dataCPU[3]);
+        cpu.used = cpu.total - cpu.free;
+        
+    }
+    catch (e)
+    {
+        logError(e);
+    }
+    
     return cpu;
 }

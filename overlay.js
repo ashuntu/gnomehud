@@ -194,7 +194,7 @@ var overlay = class Overlay extends GObject.Object
      * 
      * @returns {boolean} true
      */
-    update()
+    async update()
     {
         let updateStart = new GLib.DateTime();
 
@@ -205,7 +205,7 @@ var overlay = class Overlay extends GObject.Object
         this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
 
         // CPU
-        let cpu = Processor.getCPU();
+        let cpu = await Processor.getCPU();
 
         let cpuD = cpu.total - cpu.oldTotal;
         let cpuUsedD = cpu.used - cpu.oldUsed;
