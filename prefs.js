@@ -116,7 +116,7 @@ function addGeneralPage(window)
     group.add(delayRow);
 
     const delayRange = Gtk.SpinButton.new_with_range(
-        250, 5000, 250
+        100, 5000, 100
     );
 
     settings.bind(
@@ -400,8 +400,19 @@ function addMonitorsPage(window)
     addMonitorGroup(monitorsPage, _("Memory (RAM)"), "memory");
     addMonitorGroup(monitorsPage, _("Processor (CPU)"), "processor");
     addMonitorGroup(monitorsPage, _("Battery"), "battery");
-    addMonitorGroup(monitorsPage, _("Network"), "network");
-    addMonitorGroup(monitorsPage, _("Disks"), "disks");
+
+    const group = new Adw.PreferencesGroup();
+    monitorsPage.add(group);
+    const addMonitorDropdown = Gtk.DropDown.new_from_strings([
+        _("Add Monitor"),
+        _("Processor"),
+        _("Memory"),
+        _("Battery"),
+        _("Network"),
+        _("Disk")
+    ]);
+    addMonitorDropdown.connect("activate", () => log("Activated."));
+    group.add(addMonitorDropdown);
 }
 
 function addMonitorGroup(page, title, setting)
