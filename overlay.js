@@ -11,10 +11,10 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
-const Battery = Me.imports.battery;
-const Memory = Me.imports.memory;
-const Processor = Me.imports.processor;
-const Network = Me.imports.network;
+const Battery = Me.imports.monitors.battery;
+const Memory = Me.imports.monitors.memory;
+const Processor = Me.imports.monitors.processor;
+const Network = Me.imports.monitors.network;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
