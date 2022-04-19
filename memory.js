@@ -12,15 +12,18 @@ const ram = {
     free: 0                 // available RAM KB
 };
 
+Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
+
 /**
  * Query current RAM data from the filesystem.
  * 
  * @returns {ram} RAM info object
  */
-var getRAM = () =>
+var getRAM = async(cancellable = null) =>
 {
-    let file = Gio.File.new_for_path(MEM_DIR);
-    let data = ByteArray.toString(file.load_contents(null)[1]);
+    const file = Gio.File.new_for_path(MEM_DIR);
+    const contents = await file.load_contents_async(cancellable);
+    let data = ByteArray.toString(contents[0]);
     let dataRAM = data.match(/\d+/g);
 
     ram.total = parseInt(dataRAM[0]); // MemTotal

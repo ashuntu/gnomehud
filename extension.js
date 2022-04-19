@@ -1,5 +1,7 @@
 "use strict";
 
+const { Gio } = imports.gi;
+
 const Main = imports.ui.main;
 
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -28,6 +30,7 @@ class Extension
         log(_(`${Me.metadata.uuid}: Enabling`));
 
         this.settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
+        this.cancellable = new Gio.Cancellable();
 
         this.indicator = new Indicator.indicator(this);
         this.overlay = new Overlay.overlay(this);

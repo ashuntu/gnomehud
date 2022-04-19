@@ -14,6 +14,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Battery = Me.imports.battery;
 const Memory = Me.imports.memory;
 const Processor = Me.imports.processor;
+const Network = Me.imports.network;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -39,6 +40,7 @@ var overlay = class Overlay extends GObject.Object
 
         this._extension = extension;
         this._settings = extension.settings;
+        this._cancellable = extension.cancellable;
         this._connections = [];
 
         this.times = 0;
@@ -165,19 +167,21 @@ var overlay = class Overlay extends GObject.Object
 
             Main.uiGroup.add_actor(this.overlay);
 
-            this.update();
+            this.update().catch(logError);
 
             if (!this._eventLoop)
             {
                 this._eventLoop = Mainloop.timeout_add(
                     this._settings.get_int("update-delay"), 
-                    () => this.update()
+                    () => this.update().catch(logError)
                 );
             }
         }
         // Hide the overlay
         else
         {
+            //this._cancellable.cancel();
+
             if (this.overlay) this.overlay.destroy();
             this.overlay = null;
 
@@ -196,16 +200,16 @@ var overlay = class Overlay extends GObject.Object
      */
     async update()
     {
-        let updateStart = new GLib.DateTime();
+        let updateStart = GLib.get_monotonic_time();
 
         // RAM
-        let ram = Memory.getRAM();
+        let ram = await Memory.getRAM(this._cancellable);
         let ramPerc = (ram.used / ram.total) * 100;
 
         this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
 
         // CPU
-        let cpu = await Processor.getCPU();
+        let cpu = await Processor.getCPU(this._cancellable);
 
         let cpuD = cpu.total - cpu.oldTotal;
         let cpuUsedD = cpu.used - cpu.oldUsed;
@@ -214,11 +218,14 @@ var overlay = class Overlay extends GObject.Object
         this.cpuLabel.set_text(_(`CPU ${cpuPerc.toFixed(2)}%`));
 
         // Battery
-        let battery = Battery.getBattery();
+        let battery = await Battery.getBattery(this._cancellable);
         this.batteryLabel.set_text(_(`BAT ${battery.capacity}%`));
 
-        // let updateEnd = new GLib.DateTime();
-        // let time = updateEnd.difference(updateStart);
+        // Network
+        // let network = await Network.getNetwork(this._cancellable);
+
+        // let updateEnd = GLib.get_monotonic_time();
+        // let time = updateEnd - updateStart;
         // this.times += time;
         // this.n++;
         // log(this.times / this.n);
@@ -353,6 +360,8 @@ var overlay = class Overlay extends GObject.Object
         {
             this._settings.disconnect(event);
         }
+
+        this._cancellable.cancel();
 
         if (this.overlay) this.overlay.destroy();
         this.overlay = null;

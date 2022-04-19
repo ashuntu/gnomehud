@@ -14,49 +14,56 @@ const STATUS = {
 
 const battery = {
     capacity: 0,                // charge %
-    energyNow: 0,               // Wh of battery
-    energyFull: 0,              // full Wh
-    energyFullDesign: 0,        // full design Wh
+    energy_now: 0,              // Wh of battery
+    energy_full: 0,             // full Wh
+    energy_full_design: 0,      // full design Wh
     status: STATUS.FULL,        // charging, discharging
     technology: "None",         // Li-poly, etc
-    voltageNow: 0,              // current voltage
+    voltage_now: 0,             // current voltage
 };
+
+Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
 
 /**
  * Query current battery data from the filesystem.
  * 
  * @returns {battery} battery info object
  */
-var getBattery = () =>
+var getBattery = async(cancellable = null) =>
 {
-    let file = Gio.File.new_for_path(BATT_DIR.concat("present"));
-    let data = Number(ByteArray.toString(file.load_contents(null)[1]));
+    const file = Gio.File.new_for_path(BATT_DIR.concat("present"));
+    const content = await file.load_contents_async(cancellable);
+    const data = Number(ByteArray.toString(content[0]));
 
     if (data != 1)
     {
         return null;
     }
 
-    file = Gio.File.new_for_path(BATT_DIR.concat("capacity"));
-    battery.capacity = Number(ByteArray.toString(file.load_contents(null)[1]));
+    const files = [
+        Gio.File.new_for_path(BATT_DIR.concat("capacity")),
+        Gio.File.new_for_path(BATT_DIR.concat("energy_now")),
+        Gio.File.new_for_path(BATT_DIR.concat("energy_full")),
+        Gio.File.new_for_path(BATT_DIR.concat("energy_full_design")),
+        Gio.File.new_for_path(BATT_DIR.concat("status")),
+        Gio.File.new_for_path(BATT_DIR.concat("technology")),
+        Gio.File.new_for_path(BATT_DIR.concat("voltage_now")),
+    ];
 
-    file = Gio.File.new_for_path(BATT_DIR.concat("energy_now"));
-    battery.energyNow = Number(ByteArray.toString(file.load_contents(null)[1]));
+    let results = await Promise.all(
+        files.map(file => file.load_contents_async(cancellable))
+    );
 
-    file = Gio.File.new_for_path(BATT_DIR.concat("energy_full"));
-    battery.energyFull = Number(ByteArray.toString(file.load_contents(null)[1]));
-
-    file = Gio.File.new_for_path(BATT_DIR.concat("energy_full_design"));
-    battery.energyFullDesign = Number(ByteArray.toString(file.load_contents(null)[1]));
-
-    file = Gio.File.new_for_path(BATT_DIR.concat("status"));
-    battery.status = ByteArray.toString(file.load_contents(null)[1]);
-
-    file = Gio.File.new_for_path(BATT_DIR.concat("technology"));
-    battery.technology = ByteArray.toString(file.load_contents(null)[1]);
-
-    file = Gio.File.new_for_path(BATT_DIR.concat("voltage_now"));
-    battery.voltageNow = Number(ByteArray.toString(file.load_contents(null)[1]));
+    results.forEach((result, i) =>
+    {
+        const name = files[i].get_basename();
+        battery[name] = ByteArray.toString(result[0]);
+        
+        if (name != "technology" && name != "status")
+        {
+            battery[name] = Number(battery[name]);
+        }
+    });
 
     return battery;
 }
