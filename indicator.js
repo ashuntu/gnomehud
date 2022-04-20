@@ -5,6 +5,7 @@ const { St, GObject, Gio, GLib, Shell, Meta } = imports.gi;
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Util = imports.misc.util;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
@@ -86,16 +87,22 @@ var indicator = class Indicator extends GObject.Object
             Gio.SettingsBindFlags.DEFAULT
         );
 
+        // Monitor button
+        let systemMonitorButton = new PopupMenu.PopupMenuItem(_("Open System Monitor"));
+        let app = Shell.AppSystem.get_default().lookup_app("gnome-system-monitor.desktop");
+        systemMonitorButton.connect("activate", () => app.activate());
+        this._button.menu.addMenuItem(systemMonitorButton);
+
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Settings button
         let settingsItem = new PopupMenu.PopupMenuItem(_("Settings"));
-        settingsItem.connect("activate", this.settingsButtonActivate.bind(this));
+        settingsItem.connect("activate", () => this.settingsButtonActivate());
         this._button.menu.addMenuItem(settingsItem);
 
         // Quit button
         let disableItem = new PopupMenu.PopupMenuItem(_("Disable Extension"));
-        disableItem.connect("activate", this.disableButtonActivate.bind(this));
+        disableItem.connect("activate", () => disableButtonActivate());
         this._button.menu.addMenuItem(disableItem);
     }
 
