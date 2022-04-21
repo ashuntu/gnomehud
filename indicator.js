@@ -45,7 +45,7 @@ var indicator = class Indicator extends GObject.Object
         // Toolbar button
         this._button = new PanelMenu.Button(0.5, Me.metadata.uuid);
         let icon = new St.Icon({
-            gicon: new Gio.ThemedIcon({ name: "utilities-system-monitor-symbolic" }),
+            gicon: new Gio.ThemedIcon({ name: `${this._settings.get_string("default-icon")}-symbolic` }),
             style_class: "system-status-icon"
         });
         this._button.add_child(icon);
