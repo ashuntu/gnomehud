@@ -102,7 +102,7 @@ var indicator = class Indicator extends GObject.Object
 
         // Quit button
         let disableItem = new PopupMenu.PopupMenuItem(_("Disable Extension"));
-        disableItem.connect("activate", () => disableButtonActivate());
+        disableItem.connect("activate", () => this.disableButtonActivate());
         this._button.menu.addMenuItem(disableItem);
     }
 
