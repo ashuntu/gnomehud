@@ -167,13 +167,13 @@ var overlay = class Overlay extends GObject.Object
 
             Main.uiGroup.add_actor(this.overlay);
 
-            this.update().catch(logError);
+            this.update();
 
             if (!this._eventLoop)
             {
                 this._eventLoop = Mainloop.timeout_add(
                     this._settings.get_int("update-delay"), 
-                    () => this.update().catch(logError)
+                    () => this.update()
                 );
             }
         }
@@ -203,13 +203,13 @@ var overlay = class Overlay extends GObject.Object
         let updateStart = GLib.get_monotonic_time();
 
         // RAM
-        let ram = await Memory.getRAM(this._cancellable);
+        let ram = await Memory.getRAM(this._cancellable).catch(logError);
         let ramPerc = (ram.used / ram.total) * 100;
 
         this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
 
         // CPU
-        let cpu = await Processor.getCPU(this._cancellable);
+        let cpu = await Processor.getCPU(this._cancellable).catch(logError);
 
         let cpuD = cpu.total - cpu.oldTotal;
         let cpuUsedD = cpu.used - cpu.oldUsed;
@@ -218,7 +218,7 @@ var overlay = class Overlay extends GObject.Object
         this.cpuLabel.set_text(_(`CPU ${cpuPerc.toFixed(2)}%`));
 
         // Battery
-        let battery = await Battery.getBattery(this._cancellable);
+        let battery = await Battery.getBattery(this._cancellable).catch(logError);
         this.batteryLabel.set_text(_(`BAT ${battery.capacity}%`));
 
         // Network
@@ -360,6 +360,9 @@ var overlay = class Overlay extends GObject.Object
         {
             this._settings.disconnect(event);
         }
+
+        Mainloop.source_remove(this._eventLoop);
+        this._eventLoop = null;
 
         this._cancellable.cancel();
 
