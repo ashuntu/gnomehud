@@ -18,10 +18,7 @@ const ngettext = Domain.ngettext;
 
 var indicator = class Indicator extends GObject.Object
 {
-    static
-    {
-        GObject.registerClass(this);
-    }
+    static { GObject.registerClass(this); }
 
     /**
      * Construct a new Indicator. `create()` must be called once other GObjects
@@ -44,7 +41,7 @@ var indicator = class Indicator extends GObject.Object
     {
         // Toolbar button
         this._button = new PanelMenu.Button(0.5, Me.metadata.uuid);
-        let icon = new St.Icon({
+        const icon = new St.Icon({
             gicon: new Gio.ThemedIcon({ name: `${this._settings.get_string("default-icon")}-symbolic` }),
             style_class: "system-status-icon"
         });
@@ -60,14 +57,14 @@ var indicator = class Indicator extends GObject.Object
         Main.panel.addToStatusArea(Me.metadata.uuid, this._button);
 
         // Title
-        let titleItem = new PopupMenu.PopupMenuItem("GNOME HUD");
+        const titleItem = new PopupMenu.PopupMenuItem("GNOME HUD");
         titleItem.sensitive = false;
         this._button.menu.addMenuItem(titleItem);
 
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Overlay switch
-        let switchItem = new PopupMenu.PopupSwitchMenuItem(
+        const switchItem = new PopupMenu.PopupSwitchMenuItem(
             _("Overlay"), 
             this._settings.get_boolean("show-overlay"),
         );
@@ -83,20 +80,20 @@ var indicator = class Indicator extends GObject.Object
         );
 
         // Monitor button
-        let systemMonitorButton = new PopupMenu.PopupMenuItem(_("Open System Monitor"));
-        let app = Shell.AppSystem.get_default().lookup_app("gnome-system-monitor.desktop");
+        const systemMonitorButton = new PopupMenu.PopupMenuItem(_("Open System Monitor"));
+        const app = Shell.AppSystem.get_default().lookup_app("gnome-system-monitor.desktop");
         systemMonitorButton.connect("activate", () => app.activate());
         this._button.menu.addMenuItem(systemMonitorButton);
 
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Settings button
-        let settingsItem = new PopupMenu.PopupMenuItem(_("Settings"));
+        const settingsItem = new PopupMenu.PopupMenuItem(_("Settings"));
         settingsItem.connect("activate", () => this.settingsButtonActivate());
         this._button.menu.addMenuItem(settingsItem);
 
         // Quit button
-        let disableItem = new PopupMenu.PopupMenuItem(_("Disable Extension"));
+        const disableItem = new PopupMenu.PopupMenuItem(_("Disable Extension"));
         disableItem.connect("activate", () => this.disableButtonActivate());
         this._button.menu.addMenuItem(disableItem);
     }

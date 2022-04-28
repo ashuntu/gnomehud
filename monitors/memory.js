@@ -13,40 +13,13 @@ const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
-const MEM_DIR = "/proc/meminfo";
-
-const ram = {
-    total: 0,               // total physical RAM KB
-    used: 0,                // used RAM KB
-    free: 0                 // available RAM KB
-};
-
 Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
-
-/**
- * Query current RAM data from the filesystem.
- * 
- * @returns {ram} RAM info object
- */
-var getRAM = async(cancellable = null) =>
-{
-    const file = Gio.File.new_for_path(MEM_DIR);
-    const contents = await file.load_contents_async(cancellable);
-    let data = ByteArray.toString(contents[0]);
-    let dataRAM = data.match(/\d+/g);
-
-    ram.total = parseInt(dataRAM[0]); // MemTotal
-    ram.free = parseInt(dataRAM[2]); // MemAvailable
-    ram.used = ram.total - ram.free;
-
-    return ram;
-};
 
 var memory = class Memory extends Monitor.monitor
 {
-    static name = _("Memory");
-
     static { GObject.registerClass(this); }
+
+    static name = _("Memory");
 
     constructor()
     {
@@ -90,14 +63,14 @@ var memory = class Memory extends Monitor.monitor
     {
         const file = Gio.File.new_for_path(this.config.file);
         const contents = await file.load_contents_async(cancellable);
-        let data = ByteArray.toString(contents[0]);
-        let dataRAM = data.match(/\d+/g);
+        const data = ByteArray.toString(contents[0]);
+        const dataRAM = data.match(/\d+/g);
 
         this.stats.total = parseInt(dataRAM[0]); // MemTotal
         this.stats.free = parseInt(dataRAM[2]); // MemAvailable
         this.stats.used = this.stats.total - this.stats.free;
 
-        let ramPerc = (this.stats.used / this.stats.total) * 100;
+        const ramPerc = (this.stats.used / this.stats.total) * 100;
         this.stats.percent_used = ramPerc;
         this.stats.percent_free = 100 - ramPerc;
 
@@ -111,7 +84,7 @@ var memory = class Memory extends Monitor.monitor
             config = JSON.parse(config);
         }
 
-        let newMonitor = new Memory();
+        const newMonitor = new Memory();
         newMonitor.config = { ...newMonitor.config, ...config };
         return newMonitor;
     }

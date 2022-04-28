@@ -14,49 +14,13 @@ const ngettext = Domain.ngettext;
 
 const ByteArray = imports.byteArray;
 
-const PROC_DIR = "/proc/stat";
-
-const cpu = {
-    total: 0,               // total CPU time
-    used: 0,                // used CPU time
-    free: 0,                // idle CPU time
-    oldTotal: 0,            // prev total CPU time
-    oldUsed: 0,             // prev used CPU time
-    oldFree: 0              // prev idle CPU time
-};
-
 Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
-
-/**
- * Query current CPU data from the filesystem.
- * 
- * @returns {cpu} CPU info object
- */
-var getCPU = async(cancellable = null) =>
-{
-    const file = Gio.File.new_for_path(PROC_DIR);
-    const contents = await file.load_contents_async(cancellable);
-    const data = ByteArray.toString(contents[0]);
-
-    const dataCPU = data.match(/\d+/g);
-
-    cpu.oldTotal = cpu.total;
-    cpu.oldUsed = cpu.used;
-    cpu.oldFree = cpu.free;
-
-    cpu.total = 0;
-    for (let i = 0; i < 10; i++) cpu.total += parseInt(dataCPU[i]);
-    cpu.free = parseInt(dataCPU[3]);
-    cpu.used = cpu.total - cpu.free;
-    
-    return cpu;
-};
 
 var processor = class Processor extends Monitor.monitor
 {
-    static name = _("Processor");
-
     static { GObject.registerClass(this); }
+
+    static name = _("Processor");
 
     constructor()
     {
@@ -115,9 +79,9 @@ var processor = class Processor extends Monitor.monitor
         this.stats.used = this.stats.total - this.stats.free;
 
         // Calculate format values
-        let cpuD = this.stats.total - this.stats.oldTotal;
-        let cpuUsedD = this.stats.used - this.stats.oldUsed;
-        let cpuPerc = (cpuUsedD / cpuD) * 100;
+        const cpuD = this.stats.total - this.stats.oldTotal;
+        const cpuUsedD = this.stats.used - this.stats.oldUsed;
+        const cpuPerc = (cpuUsedD / cpuD) * 100;
         this.stats.percent_used = cpuPerc;
         this.stats.percent_free = 100 - cpuPerc;
 
@@ -131,7 +95,7 @@ var processor = class Processor extends Monitor.monitor
             config = JSON.parse(config);
         }
 
-        let newMonitor = new Processor();
+        const newMonitor = new Processor();
         newMonitor.config = { ...newMonitor.config, ...config };
         return newMonitor;
     }

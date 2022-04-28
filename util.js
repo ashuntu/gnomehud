@@ -29,7 +29,7 @@ var colorToString = (color) =>
  */
 var stringToColor = (str) =>
 {
-    let newColor = new Gdk.RGBA();
+    const newColor = new Gdk.RGBA();
     newColor.parse(str);
     return newColor;
 }

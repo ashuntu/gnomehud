@@ -17,7 +17,7 @@ const ngettext = Domain.ngettext;
 /**
  * Places where a `Monitor` may be displayed.
  */
- var places = {
+var places = {
     OVERLAY: "OVERLAY",
     INDICATOR: "INDICATOR",
     PANEL: "PANEL",
@@ -110,6 +110,7 @@ var monitor = class Monitor extends GObject.Object
 
     destroy()
     {
+        // Remove external bindings
         for (let key in this.binds)
         {
             this.binds[key].forEach((x) =>
@@ -120,6 +121,7 @@ var monitor = class Monitor extends GObject.Object
             delete this.binds[key];
         }
 
+        // Destroy labels associated with this monitor
         if (this.labels)
         {
             this.labels.forEach((v, label) =>

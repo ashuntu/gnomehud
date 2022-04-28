@@ -49,13 +49,10 @@ var overlay = class Overlay extends GObject.Object
         this._connections = [];
         this._monitors = [];
 
-        this.times = 0;
+        this.time = 0;
         this.n = 0;
 
         this.overlay = null;
-        this.ramLabel = null;
-        this.cpuLabel = null;
-        this.batteryLabel = null;
     }
 
     /**
@@ -105,6 +102,7 @@ var overlay = class Overlay extends GObject.Object
     updateMonitors()
     {
         // TODO pause update loop
+
         if (this._monitors)
         {
             this._monitors.forEach((m) =>
@@ -113,11 +111,12 @@ var overlay = class Overlay extends GObject.Object
             });
         }
 
+        // Load monitors from settings
         let x = 25;
         let y = 25;
-        this._monitors = [];
-        // Load monitors from settings
         const m = this._settings.get_strv("monitors");
+        this._monitors = [];
+
         m.forEach((mon) =>
         {
             const mObj = JSON.parse(mon);
@@ -158,7 +157,7 @@ var overlay = class Overlay extends GObject.Object
      */
     toggleOverlay()
     {
-        let toggled = !this._settings.get_boolean("show-overlay");
+        const toggled = !this._settings.get_boolean("show-overlay");
         this._settings.set_boolean("show-overlay", toggled);
     }
 
@@ -171,7 +170,7 @@ var overlay = class Overlay extends GObject.Object
 
         if (this._settings.get_boolean("show-osd"))
         {
-            let icon = new Gio.ThemedIcon({ name: "utilities-system-monitor-symbolic" });
+            const icon = new Gio.ThemedIcon({ name: "utilities-system-monitor-symbolic" });
             Main.osdWindowManager.show(
                 0, 
                 icon, 
@@ -183,8 +182,7 @@ var overlay = class Overlay extends GObject.Object
         // Show the overlay
         if (this._settings.get_boolean("show-overlay"))
         {
-            
-            let geo = this.updateGeometry();
+            const geo = this.updateGeometry();
 
             // Overlay container
             this.overlay = new St.Widget();
@@ -233,7 +231,7 @@ var overlay = class Overlay extends GObject.Object
      */
     async update()
     {
-        let updateStart = GLib.get_monotonic_time();
+        const updateStart = GLib.get_monotonic_time();
 
         const results = await Promise.all(
             this._monitors.map(m => m.query(this._cancellable))
@@ -241,12 +239,12 @@ var overlay = class Overlay extends GObject.Object
 
         results.forEach((stats, i) =>
         {
-            let m = this._monitors[i];
+            const m = this._monitors[i];
             for (const [key, value] of m.labels.entries())
             {
                 if (value)
                 {
-                    let val = stats[value.toLowerCase()];
+                    const val = stats[value.toLowerCase()];
                     if (val !== undefined)
                         key.set_text(`${val.toFixed(m.config.precision)}`);
                 }
@@ -256,11 +254,9 @@ var overlay = class Overlay extends GObject.Object
         // Network
         // let network = await Network.getNetwork(this._cancellable);
 
-        // let updateEnd = GLib.get_monotonic_time();
-        // let time = updateEnd - updateStart;
-        // this.times += time;
-        // this.n++;
-        // log(this.times / this.n);
+        const updateEnd = GLib.get_monotonic_time();
+        this.time += updateEnd - updateStart;
+        // log(this.time / ++this.n);
 
         return true;
     }
@@ -290,11 +286,11 @@ var overlay = class Overlay extends GObject.Object
      */
     updateGeometry()
     {
-        let mI = this._settings.get_int("default-monitor") - 1;
+        const mI = this._settings.get_int("default-monitor") - 1;
         this.monitor = Main.layoutManager.primaryMonitor;
         if (mI >= 0) this.monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
 
-        let anchor = this._settings.get_int("anchor-corner");
+        const anchor = this._settings.get_int("anchor-corner");
         let x = this.monitor.x;
         let y = this.monitor.y;
         let width = this._settings.get_int("overlay-w");
@@ -342,7 +338,7 @@ var overlay = class Overlay extends GObject.Object
      */
     geometryChanged()
     {
-        let geo = this.updateGeometry();
+        const geo = this.updateGeometry();
 
         if (this.overlay)
         {
@@ -359,8 +355,8 @@ var overlay = class Overlay extends GObject.Object
     {
         if (this.overlay)
         {
-            let rgba = Util.stringToColor(this._settings.get_string("background-color"));
-            let str = Util.getCSSColor(rgba, this._settings.get_double("background-opacity"));
+            const rgba = Util.stringToColor(this._settings.get_string("background-color"));
+            const str = Util.getCSSColor(rgba, this._settings.get_double("background-opacity"));
             this.overlay.set_style(`background-color: ${str}`);
         }
     }
@@ -373,8 +369,8 @@ var overlay = class Overlay extends GObject.Object
     {
         this._monitors.forEach((m) =>
         {
-            let rgba = Util.stringToColor(m.config.color);
-            let str = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
+            const rgba = Util.stringToColor(m.config.color);
+            const str = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
 
             m.labels.forEach((v, label) =>
             {

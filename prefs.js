@@ -364,13 +364,13 @@ class BatteryMonitorGroup extends MonitorGroup
     }
 }
 
-let monitorTypes = {
+const monitorTypes = {
     Processor: Processor.processor,
     Memory: Memory.memory,
     Battery: Battery.battery,
 };
 
-let groupTypes = {
+const groupTypes = {
     Processor: ProcessorMonitorGroup,
     Memory: MemoryMonitorGroup,
     Battery: BatteryMonitorGroup,
@@ -777,15 +777,15 @@ function addMonitorsPage(window)
 
 function addMonitor(dropdown, page)
 {
-    let selected = dropdown.get_selected();
+    const selected = dropdown.get_selected();
     if (selected == 0) return;
 
-    let groups = [
+    const groups = [
         null,
         ...Object.values(groupTypes),
     ];
 
-    let group = new groups[selected]();
+    const group = new groups[selected]();
     page.add(group);
     monitorGroups.push(group);
     saveMonitors();
@@ -809,10 +809,10 @@ function loadMonitors()
 function createMonitorGroups(page)
 {
     monitorGroups = [];
-    let m = loadMonitors();
+    const m = loadMonitors();
     m.forEach((x) =>
     {
-        let group = new groupTypes[x.config.type](x);
+        const group = new groupTypes[x.config.type](x);
         monitorGroups.push(group);
         page.add(group);
     });
@@ -827,10 +827,10 @@ function moveMonitorGroup(group, delta)
 {
     if (delta === 0) return;
 
-    let page = group.get_parent();
+    const page = group.get_parent();
 
-    let direction = delta / Math.abs(delta); // +/-1
-    let swap = monitorGroups[group.index + direction];
+    const direction = delta / Math.abs(delta); // +/-1
+    const swap = monitorGroups[group.index + direction];
 
     if (direction > 0)
     {
@@ -854,7 +854,7 @@ function moveMonitorGroup(group, delta)
 
 function removeMonitorGroup(group)
 {
-    let page = group.get_parent();
+    const page = group.get_parent();
     page.remove(group);
 
     monitorGroups.splice(group.index, 1);
