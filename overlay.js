@@ -256,11 +256,11 @@ var overlay = class Overlay extends GObject.Object
         // Network
         // let network = await Network.getNetwork(this._cancellable);
 
-        let updateEnd = GLib.get_monotonic_time();
-        let time = updateEnd - updateStart;
-        this.times += time;
-        this.n++;
-        log(this.times / this.n);
+        // let updateEnd = GLib.get_monotonic_time();
+        // let time = updateEnd - updateStart;
+        // this.times += time;
+        // this.n++;
+        // log(this.times / this.n);
 
         return true;
     }
