@@ -1,9 +1,17 @@
 "use strict";
 
-const { Adw, Gdk, Gio, GLib, Gtk } = imports.gi;
+const { Adw, Gdk, Gio, GLib, GObject, Gtk } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+
+const Util = Me.imports.util;
+
+const Monitor = Me.imports.monitors.monitor;
+const Battery = Me.imports.monitors.battery;
+const Memory = Me.imports.monitors.memory;
+const Processor = Me.imports.monitors.processor;
+const Network = Me.imports.monitors.network;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -11,6 +19,362 @@ const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
 let settings;
+let monitorGroups = [];
+
+class IndexedExpander extends Adw.ExpanderRow
+{
+    static { GObject.registerClass(this); }
+
+    constructor(args)
+    {
+        super(args);
+
+        this.children = [];
+        this.footer = null;
+    }
+
+    push(child)
+    {
+        if (this.footer) this.remove(this.footer);
+
+        this.add_row(child);
+        this.children.push(child);
+        
+        if (this.footer) this.add_row(this.footer);
+    }
+
+    pop()
+    {
+        let child = this.children.pop();
+        if (child) this.remove(child);
+        return child;
+    }
+
+    setFooter(footer)
+    {
+        this.footer = footer;
+        this.add_row(footer);
+    }
+}
+
+class MonitorGroup extends Adw.PreferencesGroup
+{
+    static { GObject.registerClass(this); }
+
+    constructor(monitor)
+    {
+        super();
+
+        this.monitor = monitor;
+        this.index = monitorGroups.length;
+    }
+
+    addPrefix()
+    {
+        this.expander = new Adw.ExpanderRow();
+        this.add(this.expander);
+        this.expander.set_title(this.monitor.constructor.name);
+        this.expander.set_icon_name(`${this.monitor.config.icon}-symbolic`);
+
+        // Place
+        const placeRow = new Adw.ActionRow({ title: _("Place") });
+        placeRow.set_tooltip_text(_("The area where this monitor will be shown."));
+        this.expander.add_row(placeRow);
+
+        const overlayCheck = Gtk.CheckButton.new_with_label("Overlay");
+        overlayCheck.set_active(this.monitor.config.place.includes(Monitor.places.OVERLAY));
+        placeRow.set_activatable_widget(overlayCheck);
+        placeRow.add_suffix(overlayCheck);
+        overlayCheck.connect("toggled", () => this.toggledPlace(overlayCheck, Monitor.places.OVERLAY));
+
+        const indicatorCheck = Gtk.CheckButton.new_with_label("Indicator");
+        indicatorCheck.set_active(this.monitor.config.place.includes(Monitor.places.INDICATOR));
+        placeRow.add_suffix(indicatorCheck);
+        indicatorCheck.connect("toggled", () => this.toggledPlace(indicatorCheck, Monitor.places.INDICATOR));
+
+        const panelCheck = Gtk.CheckButton.new_with_label("Top Panel");
+        panelCheck.set_active(this.monitor.config.place.includes(Monitor.places.PANEL));
+        placeRow.add_suffix(panelCheck);
+        panelCheck.connect("toggled", () => this.toggledPlace(panelCheck, Monitor.places.PANEL));
+
+        // Label
+        const labelRow = new Adw.ActionRow({ title: _("Label") });
+        labelRow.set_tooltip_text(_("The label that may prefix this monitor."));
+        this.expander.add_row(labelRow);
+
+        const labelEntry = new Gtk.Entry({ text: this.monitor.config.label });
+        labelEntry.set_placeholder_text((new monitorTypes[this.monitor.config.type]()).config.label);
+        labelRow.add_suffix(labelEntry);
+        labelRow.set_activatable_widget(labelEntry);
+
+        this.monitor.bind("config.label", labelEntry, "text", "changed", () => saveMonitors());
+
+        // Icon
+        const iconRow = new Adw.ActionRow({ title: _("Icon") });
+        iconRow.set_tooltip_text(_("The icon that may prefix this monitor."));
+        this.expander.add_row(iconRow);
+
+        const iconEntry = new Gtk.Entry({ text: this.monitor.config.icon });
+        iconEntry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, `${this.monitor.config.icon}-symbolic`);
+        iconEntry.set_placeholder_text("face-smile");
+        iconRow.add_suffix(iconEntry);
+        iconRow.set_activatable_widget(iconEntry);
+
+        this.monitor.bind("config.icon", iconEntry, "text", "changed", () =>
+        {
+            saveMonitors()
+            iconEntry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, `${iconEntry.get_text()}-symbolic`);
+        });
+
+        // Color
+        const colorRow = new Adw.ActionRow({ title: _("Color") });
+        colorRow.set_tooltip_text(_("The color of the text for this monitor."));
+        this.expander.add_row(colorRow);
+
+        const colorButton = Gtk.ColorButton.new();
+        colorButton.set_use_alpha(false);
+        colorButton.set_rgba(Util.stringToColor(this.monitor.config.color));
+        colorRow.add_suffix(colorButton);
+        colorRow.set_activatable_widget(colorButton);
+
+        colorButton.connect("color-set", () =>
+        {
+            this.monitor.config.color = Util.colorToString(colorButton.get_rgba());
+            saveMonitors();
+        });
+
+        // Precision
+        const precisionRow = new Adw.ActionRow({ title: _("Number Precision") });
+        precisionRow.set_tooltip_text(_("The number of decimal places to show (0-10)."));
+        this.expander.add_row(precisionRow);
+
+        const precisionSpin = Gtk.SpinButton.new_with_range(0, 10, 1);
+        precisionSpin.set_value(this.monitor.config.precision);
+        precisionRow.add_suffix(precisionSpin)
+        precisionRow.set_activatable_widget(precisionSpin);
+
+        this.monitor.bind("config.precision", precisionSpin, "value", "value-changed", () => saveMonitors());
+
+        // Formats
+        const formatExpander = new IndexedExpander({ title: _("Display Formats") });
+        formatExpander.set_tooltip_text(_("The display formats/data types to show."));
+        this.expander.add_row(formatExpander);
+
+        this.monitor.config.format.forEach((x) => this.addFormatDropdown(formatExpander, x));
+
+        const opRow = new Adw.ActionRow();
+        opRow.set_activatable_widget(formatExpander);
+        formatExpander.setFooter(opRow);
+        
+        const addButton = Gtk.Button.new_from_icon_name("list-add-symbolic");
+        opRow.add_suffix(addButton);
+        addButton.connect("clicked", () =>
+        {
+            this.addFormatDropdown(formatExpander);
+        });
+
+        const removeButton = Gtk.Button.new_from_icon_name("list-remove-symbolic");
+        opRow.add_suffix(removeButton);
+        removeButton.connect("clicked", () =>
+        {
+            this.removeFormatDropdown(formatExpander);
+        });
+    }
+
+    addFormatDropdown(expander, selected = null)
+    {
+        const formats = Object.values(this.monitor.formats);
+        const formatRow = new Adw.ActionRow();
+        expander.push(formatRow);
+
+        const formatDropdown = Gtk.DropDown.new_from_strings(formats);
+        formatDropdown.index = expander.children.length - 1;
+        formatDropdown.set_hexpand(true);
+        formatRow.set_activatable_widget(formatDropdown);
+        formatRow.add_suffix(formatDropdown);
+
+        if (selected)
+        {
+            for (let i = 0; i < formats.length; i++)
+            {
+                if (formatDropdown.get_model().get_string(i) === selected)
+                {
+                    formatDropdown.set_selected(i);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            this.monitor.config.format.push(Object.values(this.monitor.formats)[0]);
+            saveMonitors();
+        }
+
+        formatDropdown.connect("notify::selected", () =>
+        {
+            let i = formatDropdown.index;
+            this.monitor.config.format[i] = formatDropdown.get_selected_item().get_string();
+            saveMonitors();
+        });
+    }
+
+    removeFormatDropdown(expander, row)
+    {
+        expander.pop();
+        this.monitor.config.format.pop();
+        saveMonitors();
+    }
+
+    addSuffix()
+    {
+        const actionRow = new Adw.ActionRow();
+        this.add(actionRow);
+        actionRow.set_activatable_widget(this.expander);
+
+        // Down
+        const downButton = Gtk.Button.new_from_icon_name("go-down-symbolic");
+        actionRow.add_prefix(downButton);
+        downButton.set_tooltip_text(_("Move monitor down."));
+        downButton.connect("clicked", () => moveMonitorGroup(this, 1));
+
+        // Count
+        this.indexLabel = Gtk.Label.new(`${this.index + 1}`);
+        actionRow.add_prefix(this.indexLabel);
+
+        // Up
+        const upButton = Gtk.Button.new_from_icon_name("go-up-symbolic");
+        actionRow.add_prefix(upButton);
+        upButton.set_tooltip_text(_("Move monitor up."));
+        upButton.connect("clicked", () => moveMonitorGroup(this, -1));
+
+        // Delete
+        const deleteButton = Gtk.Button.new_from_icon_name("user-trash-symbolic");
+        actionRow.add_suffix(deleteButton);
+        deleteButton.connect("clicked", () => removeMonitorGroup(this));
+    }
+
+    redrawNumberLabel()
+    {
+        this.indexLabel.set_text(`${this.index + 1}`);
+    }
+
+    toggledPlace(check, place)
+    {
+        if (check.get_active())
+        {
+            if (this.monitor.config.place.indexOf(place) < 0)
+                this.monitor.config.place.push(place);
+        }
+        else
+        {
+            let i = this.monitor.config.place.indexOf(place);
+            if (i >= 0) this.monitor.config.place.splice(i, 1);
+        }
+
+        saveMonitors();
+    }
+
+    toString()
+    {
+        return this.monitor.toConfigString();
+    }
+}
+
+class ProcessorMonitorGroup extends MonitorGroup
+{
+    static { GObject.registerClass(this); }
+
+    constructor(processor = null)
+    {
+        super(processor = processor ?? new Processor.processor());
+        
+        this.processor = processor;
+        this.addPrefix();
+        this.populate();
+        this.addSuffix();
+    }
+
+    /**
+     * Add widgets to this group.
+     */
+    populate()
+    {
+        const fileRow = new Adw.ActionRow({ title: _("Stat File") });
+        fileRow.set_tooltip_text(_("File path cooresponding to the /proc/stat processor information."));
+        this.expander.add_row(fileRow);
+
+        const fileEntry = new Gtk.Entry({ text: this.processor.config.file });
+        fileEntry.set_placeholder_text("/proc/stat");
+        fileRow.set_activatable_widget(fileEntry);
+        fileRow.add_suffix(fileEntry);
+        
+        this.processor.bind("config.file", fileEntry, "text", "changed", () => saveMonitors());
+    }
+}
+
+class MemoryMonitorGroup extends MonitorGroup
+{
+    static { GObject.registerClass(this); }
+
+    constructor(memory = null)
+    {
+        super(memory = memory ?? new Memory.memory());
+        
+        this.memory = memory;
+        this.addPrefix();
+        this.populate();
+        this.addSuffix();
+    }
+
+    /**
+     * Add widgets to this group.
+     */
+    populate()
+    {
+        const fileRow = new Adw.ActionRow({ title: _("Memory File") });
+        this.expander.add_row(fileRow);
+        const fileEntry = new Gtk.Entry({ text: this.memory.config.file });
+        fileRow.add_suffix(fileEntry);
+    }
+}
+
+class BatteryMonitorGroup extends MonitorGroup
+{
+    static { GObject.registerClass(this); }
+
+    constructor(battery = null)
+    {
+        super(battery = battery ?? new Battery.battery());
+        
+        this.battery = battery;
+        this.addPrefix();
+        this.populate();
+        this.addSuffix();
+    }
+
+    /**
+     * Add widgets to this group.
+     */
+    populate()
+    {
+        const fileRow = new Adw.ActionRow({ title: _("Battery File") });
+        this.expander.add_row(fileRow);
+        const fileEntry = new Gtk.Entry({ text: this.battery.config.file });
+        fileRow.add_suffix(fileEntry);
+    }
+}
+
+let monitorTypes = {
+    Processor: Processor.processor,
+    Memory: Memory.memory,
+    Battery: Battery.battery,
+};
+
+let groupTypes = {
+    Processor: ProcessorMonitorGroup,
+    Memory: MemoryMonitorGroup,
+    Battery: BatteryMonitorGroup,
+};
 
 /**
  * Intialize objects needed for the preferences page.
@@ -397,62 +761,128 @@ function addMonitorsPage(window)
     });
     window.add(monitorsPage);
 
-    addMonitorGroup(monitorsPage, _("Memory (RAM)"), "memory");
-    addMonitorGroup(monitorsPage, _("Processor (CPU)"), "processor");
-    addMonitorGroup(monitorsPage, _("Battery"), "battery");
-
-    const group = new Adw.PreferencesGroup();
+    const group = new Adw.PreferencesGroup({
+        description: "Add New Monitor"
+    });
     monitorsPage.add(group);
     const addMonitorDropdown = Gtk.DropDown.new_from_strings([
-        _("Add Monitor"),
-        _("Processor"),
-        _("Memory"),
-        _("Battery"),
-        _("Network"),
-        _("Disk")
+        _("Select"),
+        ...Object.values(monitorTypes).map(x => x.name),
     ]);
-    addMonitorDropdown.connect("activate", () => log("Activated."));
     group.add(addMonitorDropdown);
+    addMonitorDropdown.connect("notify::selected", () => addMonitor(addMonitorDropdown, monitorsPage));
+
+    createMonitorGroups(monitorsPage);
 }
 
-function addMonitorGroup(page, title, setting)
+function addMonitor(dropdown, page)
 {
-    const group = new Adw.PreferencesGroup({
-        title: _(title)
-    });
+    let selected = dropdown.get_selected();
+    if (selected == 0) return;
+
+    let groups = [
+        null,
+        ...Object.values(groupTypes),
+    ];
+
+    let group = new groups[selected]();
     page.add(group);
+    monitorGroups.push(group);
+    saveMonitors();
 
-    /// enabled
-    const enabledRow = new Adw.ActionRow({ title: _("Enabled") });
-    group.add(enabledRow);
+    dropdown.set_selected(0);
+}
 
-    const enabledSwitch = new Gtk.Switch({
-        valign: Gtk.Align.CENTER
-    })
-    enabledRow.add_suffix(enabledSwitch);
-    enabledRow.activatable_widget = enabledSwitch;
+function loadMonitors()
+{
+    const arr = [];
+    const m = settings.get_strv("monitors");
+    m.forEach((x) =>
+    {
+        const obj = JSON.parse(x);
+        arr.push(monitorTypes[obj.type].newFromConfig(obj));
+    });
 
-    settings.bind(
-        `${setting}-enabled`,
-        enabledSwitch,
-        "active",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    return arr;
+}
 
-    /// label
-    const labelRow = new Adw.ActionRow({ title: _("Label") });
-    group.add(labelRow);
+function createMonitorGroups(page)
+{
+    monitorGroups = [];
+    let m = loadMonitors();
+    m.forEach((x) =>
+    {
+        let group = new groupTypes[x.config.type](x);
+        monitorGroups.push(group);
+        page.add(group);
+    });
+}
 
-    const labelText = new Gtk.Text();
-    labelRow.add_suffix(labelText);
-    labelRow.activatable_widget = labelText;
+/**
+ * 
+ * @param {Adw.PreferencesGroup} group group to move
+ * @param {number} delta direction to move, positive moves "down", negative moves "up"
+ */
+function moveMonitorGroup(group, delta)
+{
+    if (delta === 0) return;
 
-    settings.bind(
-        `${setting}-label`,
-        labelText,
-        "text",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    let page = group.get_parent();
+
+    let direction = delta / Math.abs(delta); // +/-1
+    let swap = monitorGroups[group.index + direction];
+
+    if (direction > 0)
+    {
+        if (group.index >= monitorGroups.length - 1) return;
+        page.reorder_child_after(group, swap);
+        monitorGroups[group.index++] = swap;
+        monitorGroups[swap.index--] = group;
+    }
+    else if (direction < 0)
+    {
+        if (group.index <= 0) return;
+        page.reorder_child_after(swap, group);
+        monitorGroups[group.index--] = swap;
+        monitorGroups[swap.index++] = group;
+    }
+
+    swap.redrawNumberLabel();
+    group.redrawNumberLabel();
+    saveMonitors();
+}
+
+function removeMonitorGroup(group)
+{
+    let page = group.get_parent();
+    page.remove(group);
+
+    monitorGroups.splice(group.index, 1);
+
+    for (let i = group.index; i < monitorGroups.length; i++)
+    {
+        monitorGroups[i].index--;
+        monitorGroups[i].redrawNumberLabel();
+    }
+
+    saveMonitors();
+}
+
+function saveMonitors()
+{
+    monitorGroups.forEach(x => log(x));
+    const m = monitorGroups.map(x => x.monitor.toConfigString());
+    settings.set_strv("monitors", m);
+}
+
+function getParentOfName(widget, name)
+{
+    if (widget.get_name() === name || !widget.get_parent())
+    {
+        return widget;
+    }
+
+    return getParentOfName(widget.get_parent(), name);
 }
 
 /**

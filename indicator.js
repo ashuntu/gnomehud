@@ -74,11 +74,6 @@ var indicator = class Indicator extends GObject.Object
         switchItem.connect("toggled", () => this.toggleOverlay());
         this._button.menu.addMenuItem(switchItem);
 
-        if (this._settings.get_boolean("show-overlay"))
-        {
-            this._extension.overlay.toggle();
-        }
-
         // Dev note: is there a better way to do this other than referencing _switch?
         this._settings.bind(
             "show-overlay",

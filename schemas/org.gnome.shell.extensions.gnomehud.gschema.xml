@@ -57,39 +57,8 @@
         </key>
 
         <!-- MONITORS -->
-        <key name="memory-enabled" type="b">
-            <default>true</default>
-        </key>
-        <key name="memory-label" type="s">
-            <default>"RAM"</default>
-        </key>
-
-        <key name="processor-enabled" type="b">
-            <default>true</default>
-        </key>
-        <key name="processor-label" type="s">
-            <default>"CPU"</default>
-        </key>
-
-        <key name="battery-enabled" type="b">
-            <default>true</default>
-        </key>
-        <key name="battery-label" type="s">
-            <default>"BAT"</default>
-        </key>
-
-        <key name="network-enabled" type="b">
-            <default>true</default>
-        </key>
-        <key name="network-label" type="s">
-            <default>"NET"</default>
-        </key>
-
-        <key name="disks-enabled" type="b">
-            <default>true</default>
-        </key>
-        <key name="disks-label" type="s">
-            <default>"DSK"</default>
+        <key name="monitors" type="as">
+            <default>[]</default>
         </key>
 
         <!-- KEYBINDS -->

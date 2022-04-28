@@ -11,6 +11,8 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const Util = Me.imports.util;
+const Monitor = Me.imports.monitors.monitor;
 const Battery = Me.imports.monitors.battery;
 const Memory = Me.imports.monitors.memory;
 const Processor = Me.imports.monitors.processor;
@@ -21,12 +23,15 @@ const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
+const monitorTypes = {
+    Processor: Processor.processor,
+    Memory: Memory.memory,
+    Battery: Battery.battery,
+};
+
 var overlay = class Overlay extends GObject.Object
 {
-    static
-    {
-        GObject.registerClass(this);
-    }
+    static { GObject.registerClass(this); }
 
     /**
      * Construct a new HUD Overlay. `create()` must be called once other GObjects
@@ -42,6 +47,7 @@ var overlay = class Overlay extends GObject.Object
         this._settings = extension.settings;
         this._cancellable = extension.cancellable;
         this._connections = [];
+        this._monitors = [];
 
         this.times = 0;
         this.n = 0;
@@ -67,7 +73,7 @@ var overlay = class Overlay extends GObject.Object
 
         Main.layoutManager.connect("monitors-changed", () => this.geometryChanged());
 
-        let settingsConnections = {
+        const settingsConnections = {
             "changed::show-overlay": this.toggle,
             "changed::update-delay": this.delayChanged,
             "changed::anchor-corner": this.geometryChanged,
@@ -79,7 +85,8 @@ var overlay = class Overlay extends GObject.Object
             "changed::background-opacity": this.updateBackground,
             "changed::foreground-opacity": this.updateForeground,
             "changed::background-color": this.updateBackground,
-            "changed::foreground-color": this.updateForeground
+            "changed::foreground-color": this.updateForeground,
+            "changed::monitors": this.updateMonitors,
         };
 
         for (let event in settingsConnections)
@@ -88,6 +95,62 @@ var overlay = class Overlay extends GObject.Object
                 this._settings.connect(event, settingsConnections[event].bind(this))
             );
         }
+
+        if (this._settings.get_boolean("show-overlay"))
+        {
+            this.toggle();
+        }
+    }
+
+    updateMonitors()
+    {
+        // TODO pause update loop
+        if (this._monitors)
+        {
+            this._monitors.forEach((m) =>
+            {
+                m.destroy();
+            });
+        }
+
+        let x = 25;
+        let y = 25;
+        this._monitors = [];
+        // Load monitors from settings
+        const m = this._settings.get_strv("monitors");
+        m.forEach((mon) =>
+        {
+            const mObj = JSON.parse(mon);
+            const newMonitor = monitorTypes[mObj.type].newFromConfig(mObj);
+            // We can ignore any monitors not being displayed on the overlay
+            if (newMonitor.config.place.indexOf(Monitor.places.OVERLAY) >= 0)
+            {
+                this._monitors.push(newMonitor);
+
+                newMonitor.labels = new Map();
+                const label = new St.Label({ text: newMonitor.config.label });
+                label.set_position(x, y);
+                if (this.overlay) this.overlay.add_child(label);
+                newMonitor.labels.set(label, null);
+
+                newMonitor.config.format.forEach((f) =>
+                {
+                    x += 100;
+                    const formatLabel = new St.Label();
+                    formatLabel.set_position(x, y);
+                    if (this.overlay) this.overlay.add_child(formatLabel);
+                    newMonitor.labels.set(formatLabel, f);
+                });
+
+                x = 25;
+                y += 50;
+            }
+        });
+
+        this.updateGeometry();
+        this.updateForeground();
+
+        // TODO start update loop
     }
 
     /**
@@ -120,6 +183,7 @@ var overlay = class Overlay extends GObject.Object
         // Show the overlay
         if (this._settings.get_boolean("show-overlay"))
         {
+            
             let geo = this.updateGeometry();
 
             // Overlay container
@@ -129,51 +193,20 @@ var overlay = class Overlay extends GObject.Object
             this.overlay.add_style_class_name("overlay");
             this.overlay.set_style(`font-size: ${this._settings.get_int("font-size")}px`);
 
-            let x = 25;
-            let y = 25;
-
-            // RAM label
-            if (this._settings.get_boolean("memory-enabled"))
-            {
-                this.ramLabel = new St.Label();
-                this.ramLabel.set_text(_("RAM 0.00%"));
-                this.ramLabel.set_position(x, y);
-                this.overlay.add_child(this.ramLabel);
-                y += 50;
-            }
-
-            // CPU label
-            if (this._settings.get_boolean("processor-enabled"))
-            {
-                this.cpuLabel = new St.Label();
-                this.cpuLabel.set_text(_("CPU 0.00%"));
-                this.cpuLabel.set_position(x, y);
-                this.overlay.add_child(this.cpuLabel);
-                y += 50;
-            }
-
-            // Battery label
-            if (this._settings.get_boolean("battery-enabled"))
-            {
-                this.batteryLabel = new St.Label();
-                this.batteryLabel.set_text(_("BAT 0%"));
-                this.batteryLabel.set_position(x, y);
-                this.overlay.add_child(this.batteryLabel);
-                y += 50;
-            }
+            this.updateMonitors();
 
             this.updateBackground();
             this.updateForeground();
 
             Main.uiGroup.add_actor(this.overlay);
 
-            this.update();
+            this.update().catch(logError);
 
             if (!this._eventLoop)
             {
                 this._eventLoop = Mainloop.timeout_add(
                     this._settings.get_int("update-delay"), 
-                    () => this.update()
+                    () => this.update().catch(logError)
                 );
             }
         }
@@ -202,33 +235,32 @@ var overlay = class Overlay extends GObject.Object
     {
         let updateStart = GLib.get_monotonic_time();
 
-        // RAM
-        let ram = await Memory.getRAM(this._cancellable).catch(logError);
-        let ramPerc = (ram.used / ram.total) * 100;
+        const results = await Promise.all(
+            this._monitors.map(m => m.query(this._cancellable))
+        );
 
-        this.ramLabel.set_text(_(`RAM ${ramPerc.toFixed(2)}%`));
-
-        // CPU
-        let cpu = await Processor.getCPU(this._cancellable).catch(logError);
-
-        let cpuD = cpu.total - cpu.oldTotal;
-        let cpuUsedD = cpu.used - cpu.oldUsed;
-        let cpuPerc = (cpuUsedD / cpuD) * 100;
-
-        this.cpuLabel.set_text(_(`CPU ${cpuPerc.toFixed(2)}%`));
-
-        // Battery
-        let battery = await Battery.getBattery(this._cancellable).catch(logError);
-        this.batteryLabel.set_text(_(`BAT ${battery.capacity}%`));
+        results.forEach((stats, i) =>
+        {
+            let m = this._monitors[i];
+            for (const [key, value] of m.labels.entries())
+            {
+                if (value)
+                {
+                    let val = stats[value.toLowerCase()];
+                    if (val !== undefined)
+                        key.set_text(`${val.toFixed(m.config.precision)}`);
+                }
+            }
+        });
 
         // Network
         // let network = await Network.getNetwork(this._cancellable);
 
-        // let updateEnd = GLib.get_monotonic_time();
-        // let time = updateEnd - updateStart;
-        // this.times += time;
-        // this.n++;
-        // log(this.times / this.n);
+        let updateEnd = GLib.get_monotonic_time();
+        let time = updateEnd - updateStart;
+        this.times += time;
+        this.n++;
+        log(this.times / this.n);
 
         return true;
     }
@@ -268,6 +300,13 @@ var overlay = class Overlay extends GObject.Object
         let width = this._settings.get_int("overlay-w");
         let height = this._settings.get_int("overlay-h");
 
+        this._monitors.forEach((x) =>
+        {
+            width = Math.max(width, x.labels.size * 100);
+        });
+
+        height = Math.max(height, this._monitors.length * 50);
+
         // Left corners
         if (anchor % 2 == 0)
         {
@@ -289,7 +328,12 @@ var overlay = class Overlay extends GObject.Object
             y += this.monitor.height - height - this._settings.get_int("margin-v");
         }
 
-        return { x: x, y: y, width: width, height: height };
+        return { 
+            x: x,
+            y: y,
+            width: width,
+            height: height,
+        };
     }
 
     /**
@@ -315,9 +359,8 @@ var overlay = class Overlay extends GObject.Object
     {
         if (this.overlay)
         {
-            let rgba = new Gdk.RGBA();
-            rgba.parse(this._settings.get_string("background-color"));
-            let str = this.getRGBAString(rgba, this._settings.get_double("background-opacity"));
+            let rgba = Util.stringToColor(this._settings.get_string("background-color"));
+            let str = Util.getCSSColor(rgba, this._settings.get_double("background-opacity"));
             this.overlay.set_style(`background-color: ${str}`);
         }
     }
@@ -328,25 +371,16 @@ var overlay = class Overlay extends GObject.Object
      */
     updateForeground()
     {
-        let rgba = new Gdk.RGBA();
-        rgba.parse(this._settings.get_string("foreground-color"));
-        let str = this.getRGBAString(rgba, this._settings.get_double("foreground-opacity"));
+        this._monitors.forEach((m) =>
+        {
+            let rgba = Util.stringToColor(m.config.color);
+            let str = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
 
-        this.overlay.get_children().forEach((x) =>
-            x.set_style(`color: ${str}`)
-        );
-    }
-
-    /**
-     * Gets the CSS RGBA string from a given Gdk.RGBA and opacity value.
-     * 
-     * @param {Gdk.RGBA} rgba 
-     * @param {double} opacity 
-     * @returns {string}
-     */
-    getRGBAString(rgba, opacity)
-    {
-        return `rgba(${rgba.red * 255}, ${rgba.green * 255}, ${rgba.blue * 255}, ${opacity});`;
+            m.labels.forEach((v, label) =>
+            {
+                label.set_style(`color: ${str}`);
+            });
+        });
     }
 
     /**
