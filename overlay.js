@@ -6,9 +6,9 @@ const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
 const Main = imports.ui.main;
+const ExtensionManager = Main.extensionManager;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const Util = Me.imports.util;
@@ -17,6 +17,7 @@ const Battery = Me.imports.monitors.battery;
 const Memory = Me.imports.monitors.memory;
 const Processor = Me.imports.monitors.processor;
 const Network = Me.imports.monitors.network;
+const Disk = Me.imports.monitors.disk;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -27,6 +28,8 @@ const monitorTypes = {
     Processor: Processor.processor,
     Memory: Memory.memory,
     Battery: Battery.battery,
+    Network: Network.network,
+    Disk: Disk.disk,
 };
 
 var overlay = class Overlay extends GObject.Object
@@ -48,9 +51,6 @@ var overlay = class Overlay extends GObject.Object
         this._cancellable = extension.cancellable;
         this._connections = [];
         this._monitors = [];
-
-        this.time = 0;
-        this.n = 0;
 
         this.overlay = null;
     }
@@ -97,12 +97,19 @@ var overlay = class Overlay extends GObject.Object
         {
             this.toggle();
         }
+
+        this.time = 0;
+        this.n = 0;
     }
 
+    /**
+     * Creates or updates system monitors.
+     */
     updateMonitors()
     {
         // TODO pause update loop
 
+        // destroy old monitors
         if (this._monitors)
         {
             this._monitors.forEach((m) =>
@@ -112,37 +119,41 @@ var overlay = class Overlay extends GObject.Object
         }
 
         // Load monitors from settings
-        let x = 25;
-        let y = 25;
         const m = this._settings.get_strv("monitors");
         this._monitors = [];
 
+        // parse monitors from settings anew
         m.forEach((mon) =>
         {
             const mObj = JSON.parse(mon);
             const newMonitor = monitorTypes[mObj.type].newFromConfig(mObj);
+            
             // We can ignore any monitors not being displayed on the overlay
-            if (newMonitor.config.place.indexOf(Monitor.places.OVERLAY) >= 0)
+            if (newMonitor.config.place.includes(Monitor.places.OVERLAY))
             {
                 this._monitors.push(newMonitor);
 
-                newMonitor.labels = new Map();
-                const label = new St.Label({ text: newMonitor.config.label });
-                label.set_position(x, y);
-                if (this.overlay) this.overlay.add_child(label);
-                newMonitor.labels.set(label, null);
+                // create the box for the monitor
+                newMonitor.box = new St.BoxLayout();
+                newMonitor.box.set_vertical(false);
+                newMonitor.box.set_height(32);
+                newMonitor.box.set_style("margin-left: 10px; margin-top: 10px;");
 
+                // create label
+                const label = new St.Label({ text: newMonitor.config.label });
+                newMonitor.box.add_child(label);
+                label.set_width(100);
+
+                // create format labels
                 newMonitor.config.format.forEach((f) =>
                 {
-                    x += 100;
                     const formatLabel = new St.Label();
-                    formatLabel.set_position(x, y);
-                    if (this.overlay) this.overlay.add_child(formatLabel);
-                    newMonitor.labels.set(formatLabel, f);
+                    newMonitor.box.add_child(formatLabel);
+                    formatLabel.set_width(200);
                 });
-
-                x = 25;
-                y += 50;
+                
+                // add the box to the parent box
+                if (this.overlay) this.overlay.add_child(newMonitor.box);
             }
         });
 
@@ -185,7 +196,8 @@ var overlay = class Overlay extends GObject.Object
             const geo = this.updateGeometry();
 
             // Overlay container
-            this.overlay = new St.Widget();
+            this.overlay = new St.BoxLayout();
+            this.overlay.set_vertical(true);
             this.overlay.set_position(geo.x, geo.y);
             this.overlay.set_size(geo.width, geo.height);
             this.overlay.add_style_class_name("overlay");
@@ -240,23 +252,26 @@ var overlay = class Overlay extends GObject.Object
         results.forEach((stats, i) =>
         {
             const m = this._monitors[i];
-            for (const [key, value] of m.labels.entries())
+            m.box.get_children().forEach((child, i) =>
             {
-                if (value)
+                if (i > 0)
                 {
-                    const val = stats[value.toLowerCase()];
-                    if (val !== undefined)
-                        key.set_text(`${val.toFixed(m.config.precision)}`);
+                    const val = stats[m.config.format[i - 1].toLowerCase()];
+                    if (typeof val === "number")
+                    {
+                        child.set_text(`${val.toFixed(m.config.precision)}`);
+                    }
+                    else
+                    {
+                        child.set_text(`${val}`);
+                    }
                 }
-            }
+            });
         });
-
-        // Network
-        // let network = await Network.getNetwork(this._cancellable);
 
         const updateEnd = GLib.get_monotonic_time();
         this.time += updateEnd - updateStart;
-        // log(this.time / ++this.n);
+        log(this.time / ++this.n);
 
         return true;
     }
@@ -296,12 +311,21 @@ var overlay = class Overlay extends GObject.Object
         let width = this._settings.get_int("overlay-w");
         let height = this._settings.get_int("overlay-h");
 
-        this._monitors.forEach((x) =>
+        let h = 0;
+        this._monitors.forEach((m) =>
         {
-            width = Math.max(width, x.labels.size * 100);
+            h += m.box.get_children()[0].get_height();
+
+            let w = 0;
+            m.box.get_children().forEach((c) =>
+            {
+                w += c.get_width();
+            });
+
+            width = Math.max(width, w);
         });
 
-        height = Math.max(height, this._monitors.length * 50);
+        height = Math.max(height, h);
 
         // Left corners
         if (anchor % 2 == 0)
@@ -372,7 +396,7 @@ var overlay = class Overlay extends GObject.Object
             const rgba = Util.stringToColor(m.config.color);
             const str = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
 
-            m.labels.forEach((v, label) =>
+            m.box.get_children().forEach((label) =>
             {
                 label.set_style(`color: ${str}`);
             });
@@ -395,6 +419,12 @@ var overlay = class Overlay extends GObject.Object
         this._eventLoop = null;
 
         this._cancellable.cancel();
+
+        this._monitors.forEach((m) =>
+        {
+            m.destroy();
+        });
+        this._monitors = null;
 
         if (this.overlay) this.overlay.destroy();
         this.overlay = null;
