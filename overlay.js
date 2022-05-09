@@ -83,6 +83,8 @@ var overlay = class Overlay extends GObject.Object
             "changed::foreground-opacity": this.updateForeground,
             "changed::background-color": this.updateBackground,
             "changed::foreground-color": this.updateForeground,
+            "changed::border-radius": this.updateBackground,
+            "changed::font": this.updateForeground,
             "changed::monitors": this.updateMonitors,
         };
 
@@ -136,7 +138,6 @@ var overlay = class Overlay extends GObject.Object
                 // create the box for the monitor
                 newMonitor.box = new St.BoxLayout();
                 newMonitor.box.set_vertical(false);
-                newMonitor.box.set_height(32);
                 newMonitor.box.set_style("margin-left: 10px; margin-top: 10px;");
 
                 // create label
@@ -193,17 +194,16 @@ var overlay = class Overlay extends GObject.Object
         // Show the overlay
         if (this._settings.get_boolean("show-overlay"))
         {
-            const geo = this.updateGeometry();
-
             // Overlay container
             this.overlay = new St.BoxLayout();
             this.overlay.set_vertical(true);
+
+            this.updateMonitors();
+
+            const geo = this.updateGeometry();
             this.overlay.set_position(geo.x, geo.y);
             this.overlay.set_size(geo.width, geo.height);
             this.overlay.add_style_class_name("overlay");
-            this.overlay.set_style(`font-size: ${this._settings.get_int("font-size")}px`);
-
-            this.updateMonitors();
 
             this.updateBackground();
             this.updateForeground();
@@ -381,7 +381,10 @@ var overlay = class Overlay extends GObject.Object
         {
             const rgba = Util.stringToColor(this._settings.get_string("background-color"));
             const str = Util.getCSSColor(rgba, this._settings.get_double("background-opacity"));
-            this.overlay.set_style(`background-color: ${str}`);
+            this.overlay.set_style(
+                `background-color: ${str}` +
+                `border-radius: ${this._settings.get_string("border-radius")}`
+            );
         }
     }
 
@@ -395,10 +398,16 @@ var overlay = class Overlay extends GObject.Object
         {
             const rgba = Util.stringToColor(m.config.color);
             const str = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
+            const font = Util.fontToCSS(this._settings.get_string("font"));
+
+            m.box.set_height(Number(this._settings.get_string("font").match(/\d+/g)[0]) * 2);
 
             m.box.get_children().forEach((label) =>
             {
-                label.set_style(`color: ${str}`);
+                label.set_style(
+                    `color: ${str}` +
+                    `font: ${font}`
+                );
             });
         });
     }

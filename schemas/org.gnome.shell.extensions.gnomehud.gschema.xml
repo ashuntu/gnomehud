@@ -48,12 +48,15 @@
         <key name="foreground-opacity" type="d">
             <default>0.75</default>
         </key>
+        <key name="border-radius" type="s">
+            <default>"10px"</default>
+        </key>
         <!-- See: https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html -->
         <key name="default-icon" type="s">
             <default>"utilities-system-monitor"</default>
         </key>
-        <key name="font-size" type="i">
-            <default>16</default>
+        <key name="font" type="s">
+            <default>"Monospace 16"</default>
         </key>
 
         <!-- MONITORS -->

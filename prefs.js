@@ -846,6 +846,49 @@ function addStylesPage(window)
             foregroundButton.set_rgba(rgba);
         }
     );
+
+    // border-radius
+    const borderRow = new Adw.ActionRow({
+        title: _("Border Radius"),
+        subtitle: _("See: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius")
+    });
+    borderRow.set_tooltip_text(_("Overlay border radius (corner radius)."));
+    group.add(borderRow);
+
+    const borderEntry = Gtk.Entry.new();
+    
+    settings.bind(
+        "border-radius",
+        borderEntry,
+        "text",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    borderRow.add_suffix(borderEntry);
+    borderRow.set_activatable_widget(borderEntry);
+    addResetButton(borderRow, "border-radius");
+
+    // font
+    const fontRow = new Adw.ActionRow({
+        title: _("Font"),
+        subtitle: _("Monospace fonts are highly recommended")
+    });
+    fontRow.set_tooltip_text(_("The font to use for all overlay text."));
+    group.add(fontRow);
+
+    const fontButton = Gtk.FontButton.new();
+    fontButton.set_level(2);
+
+    settings.bind(
+        "font",
+        fontButton,
+        "font",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    fontRow.add_suffix(fontButton);
+    fontRow.set_activatable_widget(fontButton);
+    addResetButton(fontRow, "font");
 }
 
 function addMonitorsPage(window)

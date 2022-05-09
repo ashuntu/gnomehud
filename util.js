@@ -114,3 +114,25 @@ var secondsToMono = (seconds) =>
 
 //     return string;
 // }
+
+/**
+ * Convert a GTK-style font to a CSS-style font
+ * 
+ * @param {string} font GTK-style font, e.g. "Monospace Bold 16"
+ * @returns {string} CSS-style font, e.g. "16px Bold Monospace"
+ */
+var fontToCSS = (font) =>
+{
+    let css = "";
+    let f = null;
+
+    // font-size
+    const regSize = /\d+/g;
+    if (f = font.match(regSize))
+    {
+        css += `${f[0]}px `;
+        font = font.replace(regSize, "");
+    }
+
+    return css.concat(font).trim();
+}
