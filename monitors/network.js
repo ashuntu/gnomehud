@@ -95,7 +95,10 @@ var network = class Network extends Monitor.monitor
                     (this.stats.received - this.stats.old.received) / Util.monoToSeconds(this.stats.updated - this.stats.old.updated),
                     this.config.precision
                 ) + "/s";
-                this.stats.speed_up = (this.stats.sent - this.stats.old.sent) / (this.stats.updated - this.stats.old.updated);
+                this.stats.speed_up = Util.bytesToHuman(
+                    (this.stats.sent - this.stats.old.sent) / Util.monoToSeconds(this.stats.updated - this.stats.old.updated),
+                    this.config.precision
+                ) + "/s";
 
                 if (this.config.format.includes(this.formats.PING))
                 {
