@@ -1,6 +1,6 @@
 "use strict";
 
-const { GObject } = imports.gi;
+const { GLib, GObject } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -23,18 +23,48 @@ var places = {
     PANEL: "PANEL",
 };
 
-var formats = {
-    PERCENT: "PERCENT",
-    USED: "USED",
-    FREE: "FREE",
-    TOTAL: "TOTAL",
-    TEMP: "TEMP",
-    TIME_TO_FULL: "TIME_TO_FULL",
-    TIME_TO_EMPTY: "TIME_TO_EMPTY",
-    SPEED_UP: "SPEED_UP",
-    SPEED_DOWN: "SPEED_DOWN",
+/**
+ * Represents a single point of config data for a device.
+ * 
+ * @param {string} name 
+ */
+var format = class Format extends GObject.Object
+{
+    constructor(name)
+    {
+        this.name = name;
+        this.box = null;
+        this.prefix = "";
+        this.suffix = "";
+    }
+
+    parse(formatString)
+    {
+        let obj = JSON.parse(formatString);
+        this.name = obj.name;
+        this.prefix = obj.prefix;
+        this.suffix = obj.suffix;
+    }
+
+    toString()
+    {
+
+    }
 };
 
+var format = (f) =>
+{
+    return {
+        name: f,
+        box: null,
+        prefix: "",
+        suffix: "",
+    };
+};
+
+/**
+ * Represents a system hardware monitor.
+ */
 var monitor = class Monitor extends GObject.Object
 {
     static 
@@ -60,7 +90,9 @@ var monitor = class Monitor extends GObject.Object
 
         this.settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
 
-        this.stats = {};
+        this.stats = {
+            updated: GLib.get_monotonic_time(),
+        };
         this.config = {
             precision: 0,
             place: [],
@@ -69,13 +101,25 @@ var monitor = class Monitor extends GObject.Object
             color: this.settings.get_string("foreground-color"),
             format: [],
             file: "/",
-            type: "Monitor",
+            type: this.constructor.name,
+            old: {},
         };
+
         this.binds = {};
-        this.labels = new Map();
+
+        /** The St.BoxLayout that is used to display this `Monitor` */
+        this.box = null;
+    }
+
+    async query(cancellable = null)
+    {
+        let {old, ...o} = this.stats; // omit this.stats.old from copy
+        this.stats.old = o;
+        this.stats.updated = GLib.get_monotonic_time();
     }
 
     /**
+     * Bind a nested property on `this` to a property on `widget`
      * 
      * @param {string} property1 property on `this` to bind to
      * @param {Gtk.Widget} widget the Gtk.Widget to listen for a signal
@@ -83,12 +127,12 @@ var monitor = class Monitor extends GObject.Object
      * @param {string} signal the signal on `widget` to connect to
      * @param {Function} callback optional callback to call
      */
-    bind(property1, widget, property2, signal, callback = null)
+    bind(property1, widget, property2, callback = null)
     {
         if (!this.binds[widget]) this.binds[widget] = [];
 
         this.binds[widget].push(
-            widget.connect(signal, () =>
+            widget.connect(`notify::${property2}`, () =>
             {
                 property1
                     .split('.')
@@ -105,7 +149,7 @@ var monitor = class Monitor extends GObject.Object
 
     toConfigString()
     {
-        return JSON.stringify({ ...this.config, type: this.constructor.name });
+        return JSON.stringify({ ...this.config });
     }
 
     destroy()
@@ -121,14 +165,10 @@ var monitor = class Monitor extends GObject.Object
             delete this.binds[key];
         }
 
-        // Destroy labels associated with this monitor
-        if (this.labels)
+        if (this.box)
         {
-            this.labels.forEach((v, label) =>
-            {
-                label.destroy();
-            });
-            this.labels = null;
+            this.box.destroy();
+            this.box = null;
         }
     }
 

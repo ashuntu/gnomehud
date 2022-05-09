@@ -6,6 +6,7 @@ const ByteArray = imports.byteArray;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Util = Me.imports.util;
 const Monitor = Me.imports.monitors.monitor;
 
 const Gettext = imports.gettext;
@@ -21,6 +22,9 @@ const STATUS = {
 
 Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
 
+/**
+ * System monitor for battery devices.
+ */
 var battery = class Battery extends Monitor.monitor
 {
     static { GObject.registerClass(this); }
@@ -40,6 +44,7 @@ var battery = class Battery extends Monitor.monitor
 
         /** Run-time data for this `Battery`. */
         this.stats = {
+            ...this.stats,
             capacity: 0,                // charge %
             energy_now: 0,              // Wh of battery
             energy_full: 0,             // full Wh
@@ -62,12 +67,14 @@ var battery = class Battery extends Monitor.monitor
             icon: "battery",
             format: [ this.formats.PERCENT ],
             file: "/sys/class/power_supply/BAT0/",
-            type: "Battery",
+            type: this.constructor.name,
         };
     }
 
     async query(cancellable = null)
     {
+        super.query(cancellable);
+
         const file = Gio.File.new_for_path(this.config.file.concat("present"));
         const content = await file.load_contents_async(cancellable);
         const data = Number(ByteArray.toString(content[0]));
@@ -103,6 +110,15 @@ var battery = class Battery extends Monitor.monitor
         });
 
         this.stats.percent = (this.stats.energy_now / this.stats.energy_full) * 100;
+
+        // time to empty
+        // if (this.stats.energy_now != this.stats.old.energy_now)
+        // {
+        //     const energyDif = this.stats.old.energy_now - this.stats.energy_now;
+        //     const timeDif = this.stats.updated - this.stats.old.updated;
+        //     const dif = (energyDif / timeDif);
+        //     this.stats.time_to_empty = Util.monoToHuman(dif);
+        // }
 
         return { ...this.stats };
     }

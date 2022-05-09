@@ -15,7 +15,11 @@ const ngettext = Domain.ngettext;
 const ByteArray = imports.byteArray;
 
 Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
+Gio._promisify(Gio.File.prototype, "enumerate_children_async", "enumerate_children_finish");
 
+/**
+ * System monitor for processors like CPUs.
+ */
 var processor = class Processor extends Monitor.monitor
 {
     static { GObject.registerClass(this); }
@@ -35,6 +39,7 @@ var processor = class Processor extends Monitor.monitor
 
         /** Run-time data for this `Processor`. */
         this.stats = {
+            ...this.stats,
             total: 0,
             used: 0,
             free: 0,
@@ -56,12 +61,15 @@ var processor = class Processor extends Monitor.monitor
             icon: "cpu-x",
             format: [ this.formats.PERCENT_USED ],
             file: "/proc/stat",
-            type: "Processor",
+            tempDir: "/sys/class/thermal/",
+            type: this.constructor.name,
         };
     }
 
     async query(cancellable = null)
     {
+        super.query(cancellable);
+
         // Gather statistics
         const file = Gio.File.new_for_path(this.config.file);
         const contents = await file.load_contents_async(cancellable).catch(logError);
@@ -79,11 +87,41 @@ var processor = class Processor extends Monitor.monitor
         this.stats.used = this.stats.total - this.stats.free;
 
         // Calculate format values
-        const cpuD = this.stats.total - this.stats.oldTotal;
-        const cpuUsedD = this.stats.used - this.stats.oldUsed;
+        const cpuD = this.stats.total - this.stats.old.total;
+        const cpuUsedD = this.stats.used - this.stats.old.used;
         const cpuPerc = (cpuUsedD / cpuD) * 100;
         this.stats.percent_used = cpuPerc;
         this.stats.percent_free = 100 - cpuPerc;
+
+        const tempDir = Gio.File.new_for_path(this.config.tempDir);
+        const iter = await tempDir.enumerate_children_async(
+            "standard::*", 
+            Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS, 
+            GLib.PRIORITY_DEFAULT, cancellable
+        ).catch(logError);
+
+        // Processor Temperature
+        let f = null;
+        while (f = iter.next_file(cancellable))
+        {
+            if (f.get_name().startsWith("thermal_zone"))
+            {
+                const zoneFile = Gio.File.new_for_path(`${this.config.tempDir}/${f.get_name()}/type`);
+                const zoneContent = await zoneFile.load_contents_async(cancellable).catch(logError);
+                const zoneType = ByteArray.toString(zoneContent[0]).trim();
+
+                if (zoneType === "x86_pkg_temp")
+                {
+                    const tempFile = Gio.File.new_for_path(`${this.config.tempDir}/${f.get_name()}/temp`);
+                    const tempContent = await tempFile.load_contents_async(cancellable).catch(logError);
+                    const temp = Number(ByteArray.toString(tempContent[0]));
+
+                    this.stats.temp = temp / 1000;
+
+                    break;
+                }
+            }
+        }
 
         return { ...this.stats };
     }
@@ -99,4 +137,4 @@ var processor = class Processor extends Monitor.monitor
         newMonitor.config = { ...newMonitor.config, ...config };
         return newMonitor;
     }
-}
+};

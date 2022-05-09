@@ -15,6 +15,9 @@ const ngettext = Domain.ngettext;
 
 Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish");
 
+/**
+ * System monitor for memory devices like RAM.
+ */
 var memory = class Memory extends Monitor.monitor
 {
     static { GObject.registerClass(this); }
@@ -37,6 +40,7 @@ var memory = class Memory extends Monitor.monitor
 
         /** Run-time data for this `Memory`. */
         this.stats = {
+            ...this.stats,
             total: 0,
             used: 0,
             free: 0,
@@ -55,12 +59,14 @@ var memory = class Memory extends Monitor.monitor
             icon: "media-memory",
             format: [ this.formats.PERCENT_USED ],
             file: "/proc/meminfo",
-            type: "Memory",
+            type: this.constructor.name,
         }
     }
 
     async query(cancellable = null)
     {
+        super.query(cancellable);
+
         const file = Gio.File.new_for_path(this.config.file);
         const contents = await file.load_contents_async(cancellable);
         const data = ByteArray.toString(contents[0]);

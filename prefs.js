@@ -12,6 +12,7 @@ const Battery = Me.imports.monitors.battery;
 const Memory = Me.imports.monitors.memory;
 const Processor = Me.imports.monitors.processor;
 const Network = Me.imports.monitors.network;
+const Disk = Me.imports.monitors.disk;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -107,7 +108,7 @@ class MonitorGroup extends Adw.PreferencesGroup
         labelRow.add_suffix(labelEntry);
         labelRow.set_activatable_widget(labelEntry);
 
-        this.monitor.bind("config.label", labelEntry, "text", "changed", () => saveMonitors());
+        this.monitor.bind("config.label", labelEntry, "text", () => saveMonitors());
 
         // Icon
         const iconRow = new Adw.ActionRow({ title: _("Icon") });
@@ -120,7 +121,7 @@ class MonitorGroup extends Adw.PreferencesGroup
         iconRow.add_suffix(iconEntry);
         iconRow.set_activatable_widget(iconEntry);
 
-        this.monitor.bind("config.icon", iconEntry, "text", "changed", () =>
+        this.monitor.bind("config.icon", iconEntry, "text", () =>
         {
             saveMonitors()
             iconEntry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, `${iconEntry.get_text()}-symbolic`);
@@ -153,7 +154,7 @@ class MonitorGroup extends Adw.PreferencesGroup
         precisionRow.add_suffix(precisionSpin)
         precisionRow.set_activatable_widget(precisionSpin);
 
-        this.monitor.bind("config.precision", precisionSpin, "value", "value-changed", () => saveMonitors());
+        this.monitor.bind("config.precision", precisionSpin, "value", () => saveMonitors());
 
         // Formats
         const formatExpander = new IndexedExpander({ title: _("Display Formats") });
@@ -308,7 +309,7 @@ class ProcessorMonitorGroup extends MonitorGroup
         fileRow.set_activatable_widget(fileEntry);
         fileRow.add_suffix(fileEntry);
         
-        this.processor.bind("config.file", fileEntry, "text", "changed", () => saveMonitors());
+        this.processor.bind("config.file", fileEntry, "text", () => saveMonitors());
     }
 }
 
@@ -335,6 +336,8 @@ class MemoryMonitorGroup extends MonitorGroup
         this.expander.add_row(fileRow);
         const fileEntry = new Gtk.Entry({ text: this.memory.config.file });
         fileRow.add_suffix(fileEntry);
+
+        this.memory.bind("config.file", fileEntry, "text", () => saveMonitors());
     }
 }
 
@@ -361,6 +364,96 @@ class BatteryMonitorGroup extends MonitorGroup
         this.expander.add_row(fileRow);
         const fileEntry = new Gtk.Entry({ text: this.battery.config.file });
         fileRow.add_suffix(fileEntry);
+
+        this.battery.bind("config.file", fileEntry, "text", () => saveMonitors());
+    }
+}
+
+class NetworkMonitorGroup extends MonitorGroup
+{
+    static { GObject.registerClass(this); }
+
+    constructor(network = null)
+    {
+        super(network = network ?? new Network.network());
+        
+        this.network = network;
+        this.addPrefix();
+        this.populate();
+        this.addSuffix();
+    }
+
+    /**
+     * Add widgets to this group.
+     */
+    populate()
+    {
+        const deviceRow = new Adw.ActionRow({ title: _("Network Device")});
+        this.expander.add_row(deviceRow);
+        
+        this.network.listDevices()
+            .then((devices) =>
+            {
+                const deviceDropdown = Gtk.DropDown.new_from_strings(devices);
+                deviceRow.add_suffix(deviceDropdown);
+
+                for (let i = 0; i < devices.length; i++)
+                {
+                    if (devices[i] === this.network.config.device)
+                    {
+                        deviceDropdown.set_selected(i);
+                    }
+                }
+
+                //this.network.bind("config.device", deviceDropdown, "selected", () => saveMonitors());
+                deviceDropdown.connect("notify::selected", () =>
+                {
+                    this.network.config.device = devices[deviceDropdown.get_selected()];
+                    saveMonitors();
+                    log(this.network.config.device);
+                });
+            })
+            .catch(logError);
+
+        const fileRow = new Adw.ActionRow({ title: _("/proc File") });
+        this.expander.add_row(fileRow);
+        const fileEntry = new Gtk.Entry({ text: this.network.config.file });
+        fileRow.add_suffix(fileEntry);
+
+        this.network.bind("config.file", fileEntry, "text", () => saveMonitors());
+
+        const devicesRow = new Adw.ActionRow({ title: _("/sys Directory") });
+        this.expander.add_row(devicesRow);
+        const devicesEntry = new Gtk.Entry({ text: this.network.config.deviceDir });
+        devicesRow.add_suffix(devicesEntry);
+
+        this.network.bind("config.deviceDir", devicesEntry, "text", () => saveMonitors());
+    }
+}
+
+class DiskMonitorGroup extends MonitorGroup
+{
+    static { GObject.registerClass(this); }
+
+    constructor(disk = null)
+    {
+        super(disk = disk ?? new Disk.disk());
+        
+        this.disk = disk;
+        this.addPrefix();
+        this.populate();
+        this.addSuffix();
+    }
+
+    /**
+     * Add widgets to this group.
+     */
+    populate()
+    {
+        const fileRow = new Adw.ActionRow({ title: _("/proc File") });
+        this.expander.add_row(fileRow);
+        const fileEntry = new Gtk.Entry({ text: this.disk.config.file });
+        fileRow.add_suffix(fileEntry);
     }
 }
 
@@ -368,12 +461,16 @@ const monitorTypes = {
     Processor: Processor.processor,
     Memory: Memory.memory,
     Battery: Battery.battery,
+    Network: Network.network,
+    Disk: Disk.disk,
 };
 
 const groupTypes = {
     Processor: ProcessorMonitorGroup,
     Memory: MemoryMonitorGroup,
     Battery: BatteryMonitorGroup,
+    Network: NetworkMonitorGroup,
+    Disk: DiskMonitorGroup,
 };
 
 /**
@@ -870,19 +967,8 @@ function removeMonitorGroup(group)
 
 function saveMonitors()
 {
-    monitorGroups.forEach(x => log(x));
-    const m = monitorGroups.map(x => x.monitor.toConfigString());
+    const m = monitorGroups.map(x => x.toString());
     settings.set_strv("monitors", m);
-}
-
-function getParentOfName(widget, name)
-{
-    if (widget.get_name() === name || !widget.get_parent())
-    {
-        return widget;
-    }
-
-    return getParentOfName(widget.get_parent(), name);
 }
 
 /**
