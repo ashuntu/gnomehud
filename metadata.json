@@ -3,6 +3,7 @@
     "name": "GNOME HUD Extension",
     "description": "HUD overlay for GNOME-based desktops",
     "url": "https://github.com/ashtoncano/gnomehud",
+    "settings-schema": "org.gnome.shell.extensions.gnomehud",
     "shell-version": [
         "42"
     ]

@@ -29,7 +29,7 @@ class Extension
     {   
         log(_(`${Me.metadata.uuid}: Enabling`));
 
-        this.settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
+        this.settings = ExtensionUtils.getSettings();
         this.cancellable = new Gio.Cancellable();
 
         this.indicator = new Indicator.indicator(this);

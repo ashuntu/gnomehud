@@ -271,7 +271,7 @@ var overlay = class Overlay extends GObject.Object
 
         const updateEnd = GLib.get_monotonic_time();
         this.time += updateEnd - updateStart;
-        log(this.time / ++this.n);
+        // log(this.time / ++this.n);
 
         return true;
     }

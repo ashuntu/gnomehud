@@ -405,12 +405,10 @@ class NetworkMonitorGroup extends MonitorGroup
                     }
                 }
 
-                //this.network.bind("config.device", deviceDropdown, "selected", () => saveMonitors());
                 deviceDropdown.connect("notify::selected", () =>
                 {
                     this.network.config.device = devices[deviceDropdown.get_selected()];
                     saveMonitors();
-                    log(this.network.config.device);
                 });
             })
             .catch(logError);
@@ -478,7 +476,7 @@ const groupTypes = {
  */
 function init()
 {
-    settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
+    settings = ExtensionUtils.getSettings();
 }
 
 /**
