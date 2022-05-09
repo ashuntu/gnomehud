@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-12 16:36-0500\n"
+"POT-Creation-Date: 2022-05-09 15:10-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,94 +17,206 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: indicator.js:70
+#: indicator.js:68
 msgid "Overlay"
 msgstr ""
 
-#: indicator.js:92 prefs.js:31
+#: indicator.js:83
+msgid "Open System Monitor"
+msgstr ""
+
+#: indicator.js:91
 msgid "Settings"
 msgstr ""
 
-#: indicator.js:97
-msgid "Disable"
+#: indicator.js:96 prefs.js:623
+msgid "Disable Extension"
 msgstr ""
 
-#: overlay.js:122
-msgid "RAM 0.00%"
+#: prefs.js:81
+msgid "Place"
 msgstr ""
 
-#: overlay.js:128
-msgid "CPU 0.00%"
+#: prefs.js:82
+msgid "The area where this monitor will be shown."
 msgstr ""
 
-#: prefs.js:35
-msgid "Show Extension Indicator"
+#: prefs.js:102
+msgid "Label"
 msgstr ""
 
-#: prefs.js:59
-msgid "Show Overlay"
+#: prefs.js:103
+msgid "The label that may prefix this monitor."
 msgstr ""
 
-#: prefs.js:79
-msgid "Show Toggle Alerts"
+#: prefs.js:114
+msgid "Icon"
 msgstr ""
 
-#: prefs.js:99
-msgid "Update Delay (ms)"
+#: prefs.js:115
+msgid "The icon that may prefix this monitor."
 msgstr ""
 
-#: prefs.js:118
-msgid "Anchor Corner"
+#: prefs.js:131
+msgid "Color"
 msgstr ""
 
-#: prefs.js:122
-msgid "Top-Left"
+#: prefs.js:132
+msgid "The color of the text for this monitor."
 msgstr ""
 
-#: prefs.js:123
-msgid "Top-Right"
+#: prefs.js:148
+msgid "Number Precision"
 msgstr ""
 
-#: prefs.js:124
-msgid "Bottom-Left"
+#: prefs.js:149
+msgid "The number of decimal places to show (0-10)."
 msgstr ""
 
-#: prefs.js:125
-msgid "Bottom-Right"
+#: prefs.js:160
+msgid "Display Formats"
 msgstr ""
 
-#: prefs.js:140
-msgid "Default Monitor"
+#: prefs.js:161
+msgid "The display formats/data types to show."
 msgstr ""
 
-#: prefs.js:144
-msgid "Primary"
-msgstr ""
-
-#: prefs.js:159
-msgid "Background Color"
-msgstr ""
-
-#: prefs.js:202
-msgid "Foreground Color"
-msgstr ""
-
-#: prefs.js:245
-msgid "Keybinds"
+#: prefs.js:238
+msgid "Move monitor down."
 msgstr ""
 
 #: prefs.js:248
+msgid "Move monitor up."
+msgstr ""
+
+#: prefs.js:303
+msgid "Stat File"
+msgstr ""
+
+#: prefs.js:304
+msgid "File path cooresponding to the /proc/stat processor information."
+msgstr ""
+
+#: prefs.js:335
+msgid "Memory File"
+msgstr ""
+
+#: prefs.js:363
+msgid "Battery File"
+msgstr ""
+
+#: prefs.js:391
+msgid "Network Device"
+msgstr ""
+
+#: prefs.js:418 prefs.js:453
+msgid "/proc File"
+msgstr ""
+
+#: prefs.js:425
+msgid "/sys Directory"
+msgstr ""
+
+#: prefs.js:504
+msgid "General"
+msgstr ""
+
+#: prefs.js:512
+msgid "Show Extension Indicator"
+msgstr ""
+
+#: prefs.js:536
+msgid "Show Overlay"
+msgstr ""
+
+#: prefs.js:556
+msgid "Show Toggle Alerts"
+msgstr ""
+
+#: prefs.js:576
+msgid "Update Interval (ms)"
+msgstr ""
+
+#: prefs.js:595
+msgid "Keybinds"
+msgstr ""
+
+#: prefs.js:598
 msgid "Toggle Overlay"
 msgstr ""
 
-#: prefs.js:263
+#: prefs.js:613
 msgid "Danger Zone!"
 msgstr ""
 
-#: prefs.js:267
+#: prefs.js:617
 msgid "Reset Settings"
 msgstr ""
 
-#: prefs.js:273
-msgid "Disable Extension"
+#: prefs.js:629
+msgid "Uninstall Extension"
+msgstr ""
+
+#: prefs.js:644
+msgid "Styles"
+msgstr ""
+
+#: prefs.js:652
+msgid "Anchor Corner"
+msgstr ""
+
+#: prefs.js:656
+msgid "Top-Left"
+msgstr ""
+
+#: prefs.js:657
+msgid "Top-Right"
+msgstr ""
+
+#: prefs.js:658
+msgid "Bottom-Left"
+msgstr ""
+
+#: prefs.js:659
+msgid "Bottom-Right"
+msgstr ""
+
+#: prefs.js:674
+msgid "Default Display"
+msgstr ""
+
+#: prefs.js:678
+msgid "Primary"
+msgstr ""
+
+#: prefs.js:693
+msgid "Horizontal Margin (px)"
+msgstr ""
+
+#: prefs.js:712
+msgid "Vertical Margin (px)"
+msgstr ""
+
+#: prefs.js:731
+msgid "Overlay Width (px)"
+msgstr ""
+
+#: prefs.js:750
+msgid "Overlay Height (px)"
+msgstr ""
+
+#: prefs.js:769
+msgid "Background Color"
+msgstr ""
+
+#: prefs.js:810
+msgid "Foreground Color"
+msgstr ""
+
+#: prefs.js:857
+msgid "Monitors"
+msgstr ""
+
+#: prefs.js:866
+msgid "Select"
 msgstr ""
