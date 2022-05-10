@@ -418,6 +418,7 @@ class NetworkMonitorGroup extends MonitorGroup
             {
                 const deviceDropdown = Gtk.DropDown.new_from_strings(devices);
                 deviceRow.add_suffix(deviceDropdown);
+                deviceRow.set_activatable_widget(deviceDropdown);
 
                 for (let i = 0; i < devices.length; i++)
                 {
@@ -470,10 +471,37 @@ class DiskMonitorGroup extends MonitorGroup
      */
     populate()
     {
+        const deviceRow = new Adw.ActionRow({ title: _("Disk")});
+        this.expander.add_row(deviceRow);
+
+        this.disk.listDevices()
+            .then((devices) =>
+            {
+                const deviceDropdown = Gtk.DropDown.new_from_strings(devices);
+                deviceRow.add_suffix(deviceDropdown);
+                deviceRow.set_activatable_widget(deviceDropdown);
+
+                for (let i = 0; i < devices.length; i++)
+                {
+                    if (devices[i] === this.disk.config.device)
+                    {
+                        deviceDropdown.set_selected(i);
+                    }
+                }
+
+                deviceDropdown.connect("notify::selected", () =>
+                {
+                    this.disk.config.device = devices[deviceDropdown.get_selected()];
+                    saveMonitors();
+                });
+            })
+            .catch(logError);
+
         const fileRow = new Adw.ActionRow({ title: _("/proc File") });
         this.expander.add_row(fileRow);
         const fileEntry = new Gtk.Entry({ text: this.disk.config.file });
         fileRow.add_suffix(fileEntry);
+        fileRow.set_activatable_widget(fileEntry);
     }
 }
 
@@ -1068,7 +1096,7 @@ function newSpinButton(key, min = 0, max = 100, step = 10)
         "value",
         Gio.SettingsBindFlags.DEFAULT
     );
-    
+
     return spin;
 }
 
