@@ -70,8 +70,13 @@ class MonitorGroup extends Adw.PreferencesGroup
         this.index = monitorGroups.length;
     }
 
+    /**
+     * Add UI elements that appear before `Monitor`-specific elements.
+     */
     addPrefix()
     {
+        const defaults = new monitorTypes[this.monitor.config.type]();
+
         this.expander = new Adw.ExpanderRow();
         this.add(this.expander);
         this.expander.set_title(this.monitor.constructor.name);
@@ -104,7 +109,7 @@ class MonitorGroup extends Adw.PreferencesGroup
         this.expander.add_row(labelRow);
 
         const labelEntry = new Gtk.Entry({ text: this.monitor.config.label });
-        labelEntry.set_placeholder_text((new monitorTypes[this.monitor.config.type]()).config.label);
+        labelEntry.set_placeholder_text(defaults.config.label);
         labelRow.add_suffix(labelEntry);
         labelRow.set_activatable_widget(labelEntry);
 
@@ -117,7 +122,7 @@ class MonitorGroup extends Adw.PreferencesGroup
 
         const iconEntry = new Gtk.Entry({ text: this.monitor.config.icon });
         iconEntry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, `${this.monitor.config.icon}-symbolic`);
-        iconEntry.set_placeholder_text("face-smile");
+        iconEntry.set_placeholder_text(defaults.config.icon);
         iconRow.add_suffix(iconEntry);
         iconRow.set_activatable_widget(iconEntry);
 
@@ -182,6 +187,41 @@ class MonitorGroup extends Adw.PreferencesGroup
         });
     }
 
+    /**
+     * Add UI elements that appear after `Monitor`-specific elements.
+     */
+    addSuffix()
+    {
+        const actionRow = new Adw.ActionRow();
+        this.add(actionRow);
+        actionRow.set_activatable_widget(this.expander);
+
+        // Down
+        const downButton = Gtk.Button.new_from_icon_name("go-down-symbolic");
+        actionRow.add_prefix(downButton);
+        downButton.set_tooltip_text(_("Move monitor down."));
+        downButton.connect("clicked", () => moveMonitorGroup(this, 1));
+
+        // Count
+        this.indexLabel = Gtk.Label.new(`${this.index + 1}`);
+        actionRow.add_prefix(this.indexLabel);
+
+        // Up
+        const upButton = Gtk.Button.new_from_icon_name("go-up-symbolic");
+        actionRow.add_prefix(upButton);
+        upButton.set_tooltip_text(_("Move monitor up."));
+        upButton.connect("clicked", () => moveMonitorGroup(this, -1));
+
+        // Delete
+        const deleteButton = Gtk.Button.new_from_icon_name("user-trash-symbolic");
+        actionRow.add_suffix(deleteButton);
+        deleteButton.connect("clicked", () => removeMonitorGroup(this));
+    }
+
+    /**
+     * @param {IndexedExpander} expander the expander to append to
+     * @param {string} selected the selected format
+     */
     addFormatDropdown(expander, selected = null)
     {
         const formats = Object.values(this.monitor.formats);
@@ -219,46 +259,28 @@ class MonitorGroup extends Adw.PreferencesGroup
         });
     }
 
-    removeFormatDropdown(expander, row)
+    /**
+     * @param {IndexedExpander} expander 
+     */
+    removeFormatDropdown(expander)
     {
         expander.pop();
         this.monitor.config.format.pop();
         saveMonitors();
     }
 
-    addSuffix()
-    {
-        const actionRow = new Adw.ActionRow();
-        this.add(actionRow);
-        actionRow.set_activatable_widget(this.expander);
-
-        // Down
-        const downButton = Gtk.Button.new_from_icon_name("go-down-symbolic");
-        actionRow.add_prefix(downButton);
-        downButton.set_tooltip_text(_("Move monitor down."));
-        downButton.connect("clicked", () => moveMonitorGroup(this, 1));
-
-        // Count
-        this.indexLabel = Gtk.Label.new(`${this.index + 1}`);
-        actionRow.add_prefix(this.indexLabel);
-
-        // Up
-        const upButton = Gtk.Button.new_from_icon_name("go-up-symbolic");
-        actionRow.add_prefix(upButton);
-        upButton.set_tooltip_text(_("Move monitor up."));
-        upButton.connect("clicked", () => moveMonitorGroup(this, -1));
-
-        // Delete
-        const deleteButton = Gtk.Button.new_from_icon_name("user-trash-symbolic");
-        actionRow.add_suffix(deleteButton);
-        deleteButton.connect("clicked", () => removeMonitorGroup(this));
-    }
-
+    /**
+     * Resets this `MonitorGroup`'s index label.
+     */
     redrawNumberLabel()
     {
         this.indexLabel.set_text(`${this.index + 1}`);
     }
 
+    /**
+     * @param {Gtk.CheckButton} check 
+     * @param {string} place 
+     */
     toggledPlace(check, place)
     {
         if (check.get_active())
@@ -490,21 +512,23 @@ function fillPreferencesWindow(window)
     window.set_title(Me.metadata.name);
     window.set_icon_name(`${settings.get_string("icon")}-symbolic`);
 
-    addGeneralPage(window);
-    addStylesPage(window);
-    addMonitorsPage(window);
+    window.add(newGeneralPage());
+    window.add(newStylesPage());
+    window.add(newMonitorsPage());
 }
 
-function addGeneralPage(window)
+/**
+ * @returns {Adw.PreferencesPage} new General page
+ */
+function newGeneralPage()
 {
-    const generalPage = new Adw.PreferencesPage({
+    const page = new Adw.PreferencesPage({
         icon_name: `preferences-system-symbolic`,
         title: _("General")
     });
-    window.add(generalPage);
 
     const group = new Adw.PreferencesGroup();
-    generalPage.add(group);
+    page.add(group);
 
     // show-indicator
     const indicatorRow = new Adw.ActionRow({
@@ -513,17 +537,7 @@ function addGeneralPage(window)
     });
     group.add(indicatorRow);
 
-    const indicatorToggle = new Gtk.Switch({
-        active: settings.get_boolean("show-indicator"),
-        valign: Gtk.Align.CENTER
-    });
-
-    settings.bind(
-        "show-indicator",
-        indicatorToggle,
-        "active",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    const indicatorToggle = newSwitch("show-indicator");
 
     indicatorRow.add_suffix(Gtk.Image.new_from_icon_name(`${settings.get_string("icon")}-symbolic`));
     indicatorRow.add_suffix(indicatorToggle);
@@ -534,17 +548,7 @@ function addGeneralPage(window)
     const overlayRow = new Adw.ActionRow({ title: _("Show Overlay") });
     group.add(overlayRow);
 
-    const overlayToggle = new Gtk.Switch({
-        active: settings.get_boolean("show-overlay"),
-        valign: Gtk.Align.CENTER
-    });
-
-    settings.bind(
-        "show-overlay",
-        overlayToggle,
-        "active",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    const overlayToggle = newSwitch("show-overlay");
 
     overlayRow.add_suffix(overlayToggle);
     overlayRow.activatable_widget = overlayToggle;
@@ -554,17 +558,7 @@ function addGeneralPage(window)
     const osdRow = new Adw.ActionRow({ title: _("Show Toggle Alerts") });
     group.add(osdRow);
 
-    const osdToggle = new Gtk.Switch({
-        active: settings.get_boolean("show-osd"),
-        valign: Gtk.Align.CENTER
-    });
-
-    settings.bind(
-        "show-osd",
-        osdToggle,
-        "active",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    const osdToggle = newSwitch("show-osd");
 
     osdRow.add_suffix(osdToggle);
     osdRow.activatable_widget = osdToggle;
@@ -591,7 +585,7 @@ function addGeneralPage(window)
 
     // keybinds
     const keybindGroup = new Adw.PreferencesGroup({ title: _("Keybinds") });
-    generalPage.add(keybindGroup);
+    page.add(keybindGroup);
 
     const toggleKeybindRow = new Adw.ActionRow({ title: _("Toggle Overlay") });
     keybindGroup.add(toggleKeybindRow);
@@ -609,7 +603,7 @@ function addGeneralPage(window)
 
     // danger zone!
     const dangerGroup = new Adw.PreferencesGroup({ title: _("Danger Zone!") });
-    generalPage.add(dangerGroup);
+    page.add(dangerGroup);
 
     // reset
     const resetButton = Gtk.Button.new_with_label(_("Reset Settings"));
@@ -633,18 +627,22 @@ function addGeneralPage(window)
     const infoLabel = Gtk.Label.new(_(`Source: ${Me.metadata.url}`));
     infoLabel.selectable = true;
     dangerGroup.add(infoLabel);
+
+    return page;
 }
 
-function addStylesPage(window)
+/**
+ * @returns {Adw.PreferencesPage} new Styles page
+ */
+function newStylesPage()
 {
-    const stylesPage = new Adw.PreferencesPage({
+    const page = new Adw.PreferencesPage({
         icon_name: `applications-graphics-symbolic`,
         title: _("Styles")
     });
-    window.add(stylesPage);
 
     const group = new Adw.PreferencesGroup();
-    stylesPage.add(group);
+    page.add(group);
 
     // icon
     const iconRow = new Adw.ActionRow({ title: _("Icon") });
@@ -853,30 +851,41 @@ function addStylesPage(window)
     fontRow.add_suffix(fontButton);
     fontRow.set_activatable_widget(fontButton);
     addResetButton(fontRow, "font");
+
+    return page;
 }
 
-function addMonitorsPage(window)
+/**
+ * @returns {Adw.PreferencesPage} new Monitors page
+ */
+function newMonitorsPage()
 {
-    const monitorsPage = new Adw.PreferencesPage({
+    const page = new Adw.PreferencesPage({
         icon_name: `${settings.get_string("icon")}-symbolic`,
         title: _("Monitors")
     });
-    window.add(monitorsPage);
 
     const group = new Adw.PreferencesGroup({
         description: "Add New Monitor"
     });
-    monitorsPage.add(group);
+    page.add(group);
     const addMonitorDropdown = Gtk.DropDown.new_from_strings([
         _("Select"),
         ...Object.values(monitorTypes).map(x => x.name),
     ]);
     group.add(addMonitorDropdown);
-    addMonitorDropdown.connect("notify::selected", () => addMonitor(addMonitorDropdown, monitorsPage));
+    addMonitorDropdown.connect("notify::selected", () => addMonitor(addMonitorDropdown, page));
 
-    createMonitorGroups(monitorsPage);
+    createMonitorGroups(page);
+
+    return page;
 }
 
+/**
+ * @param {Gtk.DropDown} dropdown
+ * @param {Adw.PreferencesPage} page 
+ * @returns
+ */
 function addMonitor(dropdown, page)
 {
     const selected = dropdown.get_selected();
@@ -895,6 +904,9 @@ function addMonitor(dropdown, page)
     dropdown.set_selected(0);
 }
 
+/**
+ * @returns {Monitor[]} array of `Monitor` objects
+ */
 function loadMonitors()
 {
     const arr = [];
@@ -908,6 +920,9 @@ function loadMonitors()
     return arr;
 }
 
+/**
+ * @param {Adw.PreferencesPage} page
+ */
 function createMonitorGroups(page)
 {
     monitorGroups = [];
@@ -954,6 +969,9 @@ function moveMonitorGroup(group, delta)
     saveMonitors();
 }
 
+/**
+ * @param {MonitorGroup} group
+ */
 function removeMonitorGroup(group)
 {
     const page = group.get_parent();
@@ -970,10 +988,34 @@ function removeMonitorGroup(group)
     saveMonitors();
 }
 
+/**
+ * Save `Monitor`s to settings.
+ */
 function saveMonitors()
 {
     const m = monitorGroups.map(x => x.toString());
     settings.set_strv("monitors", m);
+}
+
+/**
+ * @param {string} key settings key
+ * @returns {Gtk.Switch} a basic switch
+ */
+function newSwitch(key)
+{
+    const gtkSwitch = new Gtk.Switch({
+        active: settings.get_boolean(key),
+        valign: Gtk.Align.CENTER
+    });
+
+    settings.bind(
+        key,
+        gtkSwitch,
+        "active",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    return gtkSwitch;
 }
 
 /**
@@ -984,6 +1026,7 @@ function newEntry(key)
 {
     const entry = Gtk.Entry.new();
     entry.set_placeholder_text(settings.get_default_value(key).get_string()[0]);
+
     settings.bind(
         key,
         entry,
@@ -1018,12 +1061,14 @@ function newIconEntry(key, icon)
 function newSpinButton(key, min = 0, max = 100, step = 10)
 {
     const spin = Gtk.SpinButton.new_with_range(min, max, step);
+
     settings.bind(
         key,
         spin,
         "value",
         Gio.SettingsBindFlags.DEFAULT
     );
+    
     return spin;
 }
 
