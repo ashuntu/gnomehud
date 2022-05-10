@@ -24,45 +24,6 @@ var places = {
 };
 
 /**
- * Represents a single point of config data for a device.
- * 
- * @param {string} name 
- */
-var format = class Format extends GObject.Object
-{
-    constructor(name)
-    {
-        this.name = name;
-        this.box = null;
-        this.prefix = "";
-        this.suffix = "";
-    }
-
-    parse(formatString)
-    {
-        let obj = JSON.parse(formatString);
-        this.name = obj.name;
-        this.prefix = obj.prefix;
-        this.suffix = obj.suffix;
-    }
-
-    toString()
-    {
-
-    }
-};
-
-var format = (f) =>
-{
-    return {
-        name: f,
-        box: null,
-        prefix: "",
-        suffix: "",
-    };
-};
-
-/**
  * Represents a system hardware monitor.
  */
 var monitor = class Monitor extends GObject.Object
@@ -97,7 +58,7 @@ var monitor = class Monitor extends GObject.Object
             precision: 0,
             place: [],
             label: "MON",
-            icon: "utilities-system-monitor-symbolic",
+            icon: `${this.settings.get_string("icon")}-symbolic`,
             color: this.settings.get_string("foreground-color"),
             format: [],
             file: "/",

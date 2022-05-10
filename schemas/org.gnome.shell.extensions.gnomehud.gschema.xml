@@ -52,7 +52,7 @@
             <default>"10px"</default>
         </key>
         <!-- See: https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html -->
-        <key name="default-icon" type="s">
+        <key name="icon" type="s">
             <default>"utilities-system-monitor"</default>
         </key>
         <key name="font" type="s">

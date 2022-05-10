@@ -488,7 +488,7 @@ function fillPreferencesWindow(window)
 {
     window.set_search_enabled(true);
     window.set_title("GNOME HUD");
-    window.set_icon_name(`${settings.get_string("default-icon")}-symbolic`);
+    window.set_icon_name(`${settings.get_string("icon")}-symbolic`);
 
     addGeneralPage(window);
     addStylesPage(window);
@@ -507,11 +507,10 @@ function addGeneralPage(window)
     generalPage.add(group);
 
     // show-indicator
-    const indicatorRow = new Adw.ActionRow({ title: _("Show Extension Indicator") });
-    indicatorRow.set_subtitle(
-        _(`Use 'gnome-extensions prefs ${Me.metadata.uuid}' to access this window manually.`)
-    );
-    indicatorRow.set_icon_name(`${settings.get_string("default-icon")}-symbolic`);
+    const indicatorRow = new Adw.ActionRow({
+        title: _("Show Extension Indicator"),
+        subtitle: _(`Use 'gnome-extensions prefs ${Me.metadata.uuid}' to access this window manually.`)
+    });
     group.add(indicatorRow);
 
     const indicatorToggle = new Gtk.Switch({
@@ -526,6 +525,7 @@ function addGeneralPage(window)
         Gio.SettingsBindFlags.DEFAULT
     );
 
+    indicatorRow.add_suffix(Gtk.Image.new_from_icon_name(`${settings.get_string("icon")}-symbolic`));
     indicatorRow.add_suffix(indicatorToggle);
     indicatorRow.activatable_widget = indicatorToggle;
     addResetButton(indicatorRow, "show-indicator");
@@ -645,6 +645,16 @@ function addStylesPage(window)
 
     const group = new Adw.PreferencesGroup();
     stylesPage.add(group);
+
+    // icon
+    const iconRow = new Adw.ActionRow({ title: _("Icon") });
+    iconRow.set_tooltip_text(_("Icon to display in the top panel"));
+    group.add(iconRow);
+
+    const iconEntry = newIconEntry("icon", settings.get_string("icon"));
+    iconRow.add_suffix(iconEntry);
+    iconRow.set_activatable_widget(iconEntry);
+    addResetButton(iconRow, "icon");
 
     // anchor-corner
     const anchorRow = new Adw.ActionRow({ title: _("Anchor Corner" )});
@@ -816,14 +826,7 @@ function addStylesPage(window)
     borderRow.set_tooltip_text(_("Overlay border radius (corner radius)."));
     group.add(borderRow);
 
-    const borderEntry = Gtk.Entry.new();
-    
-    settings.bind(
-        "border-radius",
-        borderEntry,
-        "text",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    const borderEntry = newEntry("border-radius");
 
     borderRow.add_suffix(borderEntry);
     borderRow.set_activatable_widget(borderEntry);
@@ -855,7 +858,7 @@ function addStylesPage(window)
 function addMonitorsPage(window)
 {
     const monitorsPage = new Adw.PreferencesPage({
-        icon_name: `${settings.get_string("default-icon")}-symbolic`,
+        icon_name: `${settings.get_string("icon")}-symbolic`,
         title: _("Monitors")
     });
     window.add(monitorsPage);
@@ -980,13 +983,27 @@ function saveMonitors()
 function newEntry(key)
 {
     const entry = Gtk.Entry.new();
-    entry.set_placeholder_text(settings.get_default_value(key));
+    entry.set_placeholder_text(settings.get_default_value(key).get_string()[0]);
     settings.bind(
         key,
         entry,
         "text",
         Gio.SettingsBindFlags.DEFAULT
     );
+
+    return entry;
+}
+
+/**
+ * @param {string} key settings key
+ * @param {string} icon icon name
+ * @returns {Gtk.Entry} a new Gtk.Entry with given icon bound to input
+ */
+function newIconEntry(key, icon)
+{
+    const entry = newEntry(key);
+    entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, `${icon}-symbolic`);
+    entry.connect("changed", () => entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, `${entry.get_text()}-symbolic`));
 
     return entry;
 }

@@ -32,6 +32,9 @@ var indicator = class Indicator extends GObject.Object
 
         this._extension = extension;
         this._settings = extension.settings;
+        this._cancellable = extension.cancellable;
+        this._connections = [];
+        this._monitors = [];
     }
 
     /**
@@ -41,11 +44,11 @@ var indicator = class Indicator extends GObject.Object
     {
         // Toolbar button
         this._button = new PanelMenu.Button(0.5, Me.metadata.uuid);
-        const icon = new St.Icon({
-            gicon: new Gio.ThemedIcon({ name: `${this._settings.get_string("default-icon")}-symbolic` }),
+        this._icon = new St.Icon({
+            gicon: new Gio.ThemedIcon({ name: `${this._settings.get_string("icon")}-symbolic` }),
             style_class: "system-status-icon"
         });
-        this._button.add_child(icon);
+        this._button.add_child(this._icon);
 
         this._settings.bind(
             "show-indicator",
@@ -71,7 +74,6 @@ var indicator = class Indicator extends GObject.Object
         switchItem.connect("toggled", () => this.toggleOverlay());
         this._button.menu.addMenuItem(switchItem);
 
-        // Dev note: is there a better way to do this other than referencing _switch?
         this._settings.bind(
             "show-overlay",
             switchItem._switch,
@@ -96,6 +98,18 @@ var indicator = class Indicator extends GObject.Object
         const disableItem = new PopupMenu.PopupMenuItem(_("Disable Extension"));
         disableItem.connect("activate", () => this.disableButtonActivate());
         this._button.menu.addMenuItem(disableItem);
+
+        // Bind settings
+        const settingsConnections = {
+            "changed::icon": this.iconChanged,
+        };
+
+        for (let event in settingsConnections)
+        {
+            this._connections.push(
+                this._settings.connect(event, settingsConnections[event].bind(this))
+            );
+        }
     }
 
     /**
@@ -125,11 +139,24 @@ var indicator = class Indicator extends GObject.Object
         ExtensionManager.disableExtension(Me.metadata.uuid)
     }
 
+    iconChanged()
+    {
+        this._icon.set_icon_name(`${this._settings.get_string("icon")}-symbolic`);
+    }
+
     /**
      * Destroy this object and objects it created.
      */
     destroy()
     {
+        // disconnect settings
+        for (let event in this._connections)
+        {
+            this._settings.disconnect(event);
+        }
+        this._connections = [];
+
+        // destroy button
         if (this._button) this._button.destroy();
         this._button = null;
     }
