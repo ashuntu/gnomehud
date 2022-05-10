@@ -60,7 +60,7 @@ var indicator = class Indicator extends GObject.Object
         Main.panel.addToStatusArea(Me.metadata.uuid, this._button);
 
         // Title
-        const titleItem = new PopupMenu.PopupMenuItem("GNOME HUD");
+        const titleItem = new PopupMenu.PopupMenuItem(Me.metadata.name);
         titleItem.sensitive = false;
         this._button.menu.addMenuItem(titleItem);
 

@@ -163,7 +163,7 @@ class MonitorGroup extends Adw.PreferencesGroup
 
         this.monitor.config.format.forEach((x) => this.addFormatDropdown(formatExpander, x));
 
-        const opRow = new Adw.ActionRow();
+        const opRow = new Adw.ActionRow({ subtitle: _("Formats are displayed left-to-right or top-to-bottom when applicable") });
         opRow.set_activatable_widget(formatExpander);
         formatExpander.setFooter(opRow);
         
@@ -487,7 +487,7 @@ function init()
 function fillPreferencesWindow(window)
 {
     window.set_search_enabled(true);
-    window.set_title("GNOME HUD");
+    window.set_title(Me.metadata.name);
     window.set_icon_name(`${settings.get_string("icon")}-symbolic`);
 
     addGeneralPage(window);

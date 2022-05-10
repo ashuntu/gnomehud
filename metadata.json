@@ -1,6 +1,6 @@
 {
     "uuid": "gnomehud@ashtonn.com",
-    "name": "GNOME HUD Extension",
+    "name": "GNOME HUD",
     "description": "HUD overlay for GNOME-based desktops",
     "url": "https://github.com/ashtoncano/gnomehud",
     "settings-schema": "org.gnome.shell.extensions.gnomehud",
