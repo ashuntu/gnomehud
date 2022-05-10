@@ -152,12 +152,12 @@ var network = class Network extends Monitor.monitor
         {
             newMonitor.listDevices().then((devices) =>
             {
-                for (let i in devices)
+                for (let device of devices)
                 {
                     // don't default to loopback device
-                    if (devices[i] !== "lo")
+                    if (device !== "lo")
                     {
-                        newMonitor.config.device = devices[i];
+                        newMonitor.config.device = device;
                         break;
                     }
                 }

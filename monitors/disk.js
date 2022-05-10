@@ -106,7 +106,7 @@ var disk = class Disk extends Monitor.monitor
         const devices = [];
         for (let i = 0; i < data.length; i++)
         {
-            devices.push(data[i].push(data[i][2]));
+            devices.push(data[i][2]);
         }
 
         return devices;
@@ -116,7 +116,7 @@ var disk = class Disk extends Monitor.monitor
      * Get 2D array of all diskstats
      * 
      * @param {Gio.Cancellable} cancellable 
-     * @returns {string[string[]]}
+     * @returns {string[][]}
      */
     async getData(cancellable = null)
     {
@@ -151,16 +151,16 @@ var disk = class Disk extends Monitor.monitor
         {
             newMonitor.listDevices().then((devices) =>
             {
-                for (let i in devices)
+                for (let device of devices)
                 {
                     // don't default to loopback device
-                    if (!devices[i].startsWith("loop"))
+                    if (!device.startsWith("loop"))
                     {
-                        newMonitor.config.device = devices[i];
+                        newMonitor.config.device = device;
                         break;
                     }
                 }
-            });
+            }).catch(logError);
         }
 
         return newMonitor;
