@@ -687,81 +687,42 @@ function addStylesPage(window)
     monitorRow.activatable_widget = monitorSelector;
     addResetButton(monitorRow, "default-monitor");
 
-    // margin-h
-    const marginHRow = new Adw.ActionRow({ title: _("Horizontal Margin (px)") });
-    group.add(marginHRow);
+    // margin
+    const marginRow = new Adw.ActionRow({ title: _("Margin") });
+    marginRow.set_tooltip_text(_("Margin (in pixels) between the screen edge and the overlay"));
+    group.add(marginRow);
 
-    const marginHSpin = Gtk.SpinButton.new_with_range(
-        0, 10000, 10
-    );
+    marginRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-horizontal-symbolic"));
 
-    settings.bind(
-        "margin-h",
-        marginHSpin,
-        "value",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    const marginHSpin = newSpinButton("margin-h", 0, 10000, 10);
+    marginRow.add_suffix(marginHSpin);
+    marginRow.set_activatable_widget(marginHSpin);
 
-    marginHRow.add_suffix(marginHSpin);
-    marginHRow.activatable_widget = marginHSpin;
-    addResetButton(marginHRow, "margin-h");
+    marginRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-vertical-symbolic"));
 
-    // margin-v
-    const marginVRow = new Adw.ActionRow({ title: _("Vertical Margin (px)") });
-    group.add(marginVRow);
+    const marginVSpin = newSpinButton("margin-v", 0, 10000, 10);
+    marginRow.add_suffix(marginVSpin);
 
-    const marginVSpin = Gtk.SpinButton.new_with_range(
-        0, 10000, 10
-    );
+    addResetButton(marginRow, ["margin-h", "margin-v"]);
 
-    settings.bind(
-        "margin-v",
-        marginVSpin,
-        "value",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    // size
+    const sizeRow = new Adw.ActionRow({ title: _("Size") });
+    sizeRow.set_tooltip_text(_("Overlay width and height (in pixels)"));
+    group.add(sizeRow);
 
-    marginVRow.add_suffix(marginVSpin);
-    marginVRow.activatable_widget = marginVSpin;
-    addResetButton(marginVRow, "margin-v");
+    sizeRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-horizontal-symbolic"));
 
-    // overlay-w
-    const overlayWRow = new Adw.ActionRow({ title: _("Overlay Width (px)") });
-    group.add(overlayWRow);
+    const width = newSpinButton("overlay-w", 0, 10000, 10);
+    sizeRow.add_suffix(width);
+    sizeRow.set_activatable_widget(width);
 
-    const overlayWSpin = Gtk.SpinButton.new_with_range(
-        0, 10000, 10
-    );
+    sizeRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-vertical-symbolic"));
 
-    settings.bind(
-        "overlay-w",
-        overlayWSpin,
-        "value",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+    const height = newSpinButton("overlay-h", 0, 10000, 10);
+    sizeRow.add_suffix(height);
+    sizeRow.set_activatable_widget(height);
 
-    overlayWRow.add_suffix(overlayWSpin);
-    overlayWRow.activatable_widget = overlayWSpin;
-    addResetButton(overlayWRow, "overlay-w");
-
-    // overlay-h
-    const overlayHRow = new Adw.ActionRow({ title: _("Overlay Height (px)") });
-    group.add(overlayHRow);
-
-    const overlayHSpin = Gtk.SpinButton.new_with_range(
-        0, 10000, 10
-    );
-
-    settings.bind(
-        "overlay-h",
-        overlayHSpin,
-        "value",
-        Gio.SettingsBindFlags.DEFAULT
-    );
-
-    overlayHRow.add_suffix(overlayHSpin);
-    overlayHRow.activatable_widget = overlayHSpin;
-    addResetButton(overlayHRow, "overlay-h");
+    addResetButton(sizeRow, ["overlay-w", "overlay-h"]);
 
     // background-color
     const backgroundRow = new Adw.ActionRow({ title: _("Background Color") });
@@ -1010,6 +971,43 @@ function saveMonitors()
 {
     const m = monitorGroups.map(x => x.toString());
     settings.set_strv("monitors", m);
+}
+
+/**
+ * @param {string} key settings key
+ * @returns {Gtk.Entry} a basic Gtk.Entry
+ */
+function newEntry(key)
+{
+    const entry = Gtk.Entry.new();
+    entry.set_placeholder_text(settings.get_default_value(key));
+    settings.bind(
+        key,
+        entry,
+        "text",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    return entry;
+}
+
+/**
+ * @param {string} key 
+ * @param {Number} min 
+ * @param {Number} max 
+ * @param {Number} step 
+ * @returns {Gtk.SpinButton}
+ */
+function newSpinButton(key, min = 0, max = 100, step = 10)
+{
+    const spin = Gtk.SpinButton.new_with_range(min, max, step);
+    settings.bind(
+        key,
+        spin,
+        "value",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+    return spin;
 }
 
 /**
