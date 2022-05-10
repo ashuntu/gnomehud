@@ -223,7 +223,8 @@ var overlay = class Overlay extends GObject.Object
         // Hide the overlay
         else
         {
-            //this._cancellable.cancel();
+            this._monitors.forEach((m) => m.destroy());
+            this._monitors = null;
 
             if (this.overlay) this.overlay.destroy();
             this.overlay = null;
@@ -419,20 +420,14 @@ var overlay = class Overlay extends GObject.Object
     {
         Main.wm.removeKeybinding("kb-toggle-overlay");
 
-        for (let event in this._connections)
-        {
-            this._settings.disconnect(event);
-        }
+        this._connections.forEach((c) => this._settings.disconnect(c));
 
         Mainloop.source_remove(this._eventLoop);
         this._eventLoop = null;
 
         this._cancellable.cancel();
 
-        this._monitors.forEach((m) =>
-        {
-            m.destroy();
-        });
+        this._monitors.forEach((m) => m.destroy());
         this._monitors = null;
 
         if (this.overlay) this.overlay.destroy();
