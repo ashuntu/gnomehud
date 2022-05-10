@@ -30,6 +30,12 @@
         <key name="margin-h" type="i">
             <default>100</default>
         </key>
+        <key name="padding-v" type="i">
+            <default>10</default>
+        </key>
+        <key name="padding-h" type="i">
+            <default>10</default>
+        </key>
         <key name="overlay-h" type="i">
             <default>250</default>
         </key>

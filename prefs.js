@@ -741,6 +741,24 @@ function newStylesPage()
 
     addResetButton(marginRow, ["margin-h", "margin-v"]);
 
+    // padding
+    const paddingRow = new Adw.ActionRow({ title: _("Padding") });
+    paddingRow.set_tooltip_text(_("Space between text and the edge of the overlay (in pixels)"));
+    group.add(paddingRow);
+
+    paddingRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-horizontal-symbolic"));
+
+    const paddingHSpin = newSpinButton("padding-h", 0, 1000, 2);
+    paddingRow.add_suffix(paddingHSpin);
+    paddingRow.set_activatable_widget(paddingHSpin);
+
+    paddingRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-vertical-symbolic"));
+
+    const paddingVSpin = newSpinButton("padding-v", 0, 1000, 2);
+    paddingRow.add_suffix(paddingVSpin);
+
+    addResetButton(paddingRow, ["padding-h", "padding-v"]);
+
     // size
     const sizeRow = new Adw.ActionRow({ title: _("Size") });
     sizeRow.set_tooltip_text(_("Overlay width and height (in pixels)"));

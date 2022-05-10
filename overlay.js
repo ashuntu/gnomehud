@@ -77,6 +77,8 @@ var overlay = class Overlay extends GObject.Object
             "changed::default-monitor": this.geometryChanged,
             "changed::margin-h": this.geometryChanged,
             "changed::margin-v": this.geometryChanged,
+            "changed::padding-h": this.updateForeground,
+            "changed::padding-v": this.updateForeground,
             "changed::overlay-w": this.geometryChanged,
             "changed::overlay-h": this.geometryChanged,
             "changed::background-opacity": this.updateBackground,
@@ -138,7 +140,6 @@ var overlay = class Overlay extends GObject.Object
                 // create the box for the monitor
                 newMonitor.box = new St.BoxLayout();
                 newMonitor.box.set_vertical(false);
-                newMonitor.box.set_style("margin-left: 10px; margin-top: 10px;");
 
                 // create label
                 const label = new St.Label({ text: newMonitor.config.label });
@@ -402,6 +403,11 @@ var overlay = class Overlay extends GObject.Object
             const font = Util.fontToCSS(this._settings.get_string("font"));
 
             m.box.set_height(Number(this._settings.get_string("font").match(/\d+/g)[0]) * 2);
+
+            m.box.set_style(
+                `margin-top: ${this._settings.get_int("padding-v")}px;` +
+                `margin-left: ${this._settings.get_int("padding-h")}px;`
+            );
 
             m.box.get_children().forEach((label) =>
             {
