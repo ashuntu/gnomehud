@@ -234,10 +234,6 @@ var overlay = class Overlay extends GObject.Object
      */
     async update()
     {
-        this.overlay.ensure_style();
-        this.overlay.queue_relayout();
-        this.overlay.queue_redraw();
-
         const updateStart = GLib.get_monotonic_time();
 
         const results = await Promise.all(

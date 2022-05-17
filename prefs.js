@@ -87,21 +87,21 @@ class MonitorGroup extends Adw.PreferencesGroup
         placeRow.set_tooltip_text(_("The area where this monitor will be shown."));
         this.expander.add_row(placeRow);
 
-        const overlayCheck = Gtk.CheckButton.new_with_label("Overlay");
+        const overlayCheck = Gtk.CheckButton.new_with_label(_("Overlay"));
         overlayCheck.set_active(this.monitor.config.place.includes(Monitor.places.OVERLAY));
         placeRow.set_activatable_widget(overlayCheck);
         placeRow.add_suffix(overlayCheck);
         overlayCheck.connect("toggled", () => this.toggledPlace(overlayCheck, Monitor.places.OVERLAY));
 
-        const indicatorCheck = Gtk.CheckButton.new_with_label("Indicator");
+        const indicatorCheck = Gtk.CheckButton.new_with_label(_("Indicator"));
         indicatorCheck.set_active(this.monitor.config.place.includes(Monitor.places.INDICATOR));
         placeRow.add_suffix(indicatorCheck);
         indicatorCheck.connect("toggled", () => this.toggledPlace(indicatorCheck, Monitor.places.INDICATOR));
 
-        const panelCheck = Gtk.CheckButton.new_with_label("Top Panel");
-        panelCheck.set_active(this.monitor.config.place.includes(Monitor.places.PANEL));
-        placeRow.add_suffix(panelCheck);
-        panelCheck.connect("toggled", () => this.toggledPlace(panelCheck, Monitor.places.PANEL));
+        const popupCheck = Gtk.CheckButton.new_with_label(_("Popup"));
+        popupCheck.set_active(this.monitor.config.place.includes(Monitor.places.POPUP));
+        placeRow.add_suffix(popupCheck);
+        popupCheck.connect("toggled", () => this.toggledPlace(popupCheck, Monitor.places.POPUP));
 
         // Label
         const labelRow = new Adw.ActionRow({ title: _("Label") });

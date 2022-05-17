@@ -1,20 +1,37 @@
 "use strict";
 
-const { St, GObject, Gio, GLib, Shell, Meta } = imports.gi;
+const { Clutter, St, GObject, Gio, GLib, Shell, Meta } = imports.gi;
+
+const Mainloop = imports.mainloop;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const Util = imports.misc.util;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const Util = Me.imports.util;
+const Monitor = Me.imports.monitors.monitor;
+const Battery = Me.imports.monitors.battery;
+const Memory = Me.imports.monitors.memory;
+const Processor = Me.imports.monitors.processor;
+const Network = Me.imports.monitors.network;
+const Disk = Me.imports.monitors.disk;
+
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
+
+const monitorTypes = {
+    Processor: Processor.processor,
+    Memory: Memory.memory,
+    Battery: Battery.battery,
+    Network: Network.network,
+    Disk: Disk.disk,
+};
 
 var indicator = class Indicator extends GObject.Object
 {
@@ -42,13 +59,47 @@ var indicator = class Indicator extends GObject.Object
      */
     create()
     {
+        // Bind settings
+        const settingsConnections = {
+            "changed::icon": this.iconChanged,
+            "changed::monitors": this.updatePanel,
+        };
+
+        for (let event in settingsConnections)
+        {
+            this._connections.push(
+                this._settings.connect(event, settingsConnections[event].bind(this))
+            );
+        }
+
+        this.updatePanel();
+    }
+
+    updatePanel()
+    {
+        if (this._button)
+        {
+            this._button.destroy();
+            this._button = null;
+        }
+
+        if (this._eventLoop)
+        {
+            Mainloop.source_remove(this._eventLoop);
+            this._eventLoop = null;
+        }
+
         // Toolbar button
         this._button = new PanelMenu.Button(0.5, Me.metadata.uuid);
         this._icon = new St.Icon({
             gicon: new Gio.ThemedIcon({ name: `${this._settings.get_string("icon")}-symbolic` }),
             style_class: "system-status-icon"
         });
-        this._button.add_child(this._icon);
+
+        this._box = new St.BoxLayout();
+        this._box.set_vertical(false);
+        this._box.add_child(this._icon);
+        this._button.add_child(this._box);
 
         this._settings.bind(
             "show-indicator",
@@ -65,6 +116,9 @@ var indicator = class Indicator extends GObject.Object
         this._button.menu.addMenuItem(titleItem);
 
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        // Monitors
+        this.updateMonitors();
 
         // Overlay switch
         const switchItem = new PopupMenu.PopupSwitchMenuItem(
@@ -99,17 +153,110 @@ var indicator = class Indicator extends GObject.Object
         disableItem.connect("activate", () => this.disableButtonActivate());
         this._button.menu.addMenuItem(disableItem);
 
-        // Bind settings
-        const settingsConnections = {
-            "changed::icon": this.iconChanged,
-        };
-
-        for (let event in settingsConnections)
+        if (!this._eventLoop)
         {
-            this._connections.push(
-                this._settings.connect(event, settingsConnections[event].bind(this))
+            this._eventLoop = Mainloop.timeout_add(
+                this._settings.get_int("update-delay"),
+                () => this.update().catch(logError)
             );
         }
+    }
+
+    updateMonitors()
+    {
+        // destroy old monitors
+        for (let monitor of this._monitors)
+        {
+            monitor.destroy();
+        }
+
+        let popupNeeded = false;
+        const m = this._settings.get_strv("monitors");
+        this._monitors = [];
+
+        for (let monitorString of m)
+        {
+            const mObj = JSON.parse(monitorString);
+            const newMonitor = monitorTypes[mObj.type].newFromConfig(mObj);
+
+            if (newMonitor.config.place.includes(Monitor.places.POPUP) ||
+                newMonitor.config.place.includes(Monitor.places.INDICATOR))
+            {
+                if (newMonitor.config.place.includes(Monitor.places.POPUP))
+                {
+                    newMonitor.menuItem = new PopupMenu.PopupMenuItem(newMonitor.config.label);
+                    newMonitor.menuItem.sensitive = false;
+                    this._button.menu.addMenuItem(newMonitor.menuItem);
+
+                    popupNeeded = true;
+                }
+                
+                if (newMonitor.config.place.includes(Monitor.places.INDICATOR))
+                {
+                    newMonitor.icon = new St.Icon({
+                        gicon: new Gio.ThemedIcon({ name: `${newMonitor.config.icon}-symbolic` }),
+                        style_class: "system-status-icon"
+                    });
+                    newMonitor.label = new St.Label();
+                    newMonitor.label.set_y_align(Clutter.ActorAlign.CENTER);
+                    this._box.add_child(newMonitor.icon);
+                    this._box.add_child(newMonitor.label);
+
+                    if (this._icon)
+                    {
+                        this._icon.destroy();
+                        this._icon = null;
+                    }
+                }
+
+                this._monitors.push(newMonitor);
+            }
+            
+        }
+
+        if (popupNeeded)
+        {
+            this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        }
+    }
+
+    async update()
+    {
+        const updateStart = GLib.get_monotonic_time();
+
+        const results = await Promise.all(
+            this._monitors.map(m => m.query(this._cancellable))
+        );
+
+        results.forEach((stats, i) =>
+        {
+            const monitor = this._monitors[i];
+            let monitorString = "";
+
+            for (let format of monitor.config.format)
+            {
+                const val = stats[format.toLowerCase()];
+
+                if (typeof val === "number")
+                {
+                    monitorString += `${val.toFixed(monitor.config.precision)}\t`;
+                }
+                else
+                {
+                    monitorString += `${val}\t`;
+                }
+            }
+            
+            if (monitor.menuItem)
+            {
+                monitor.menuItem.label.set_text(`${monitor.config.label}\t${monitorString}`);
+            }
+
+            if (monitor.label)
+            {
+                monitor.label.set_text(monitorString);
+            }
+        });;
     }
 
     /**
@@ -155,6 +302,12 @@ var indicator = class Indicator extends GObject.Object
             this._settings.disconnect(event);
         }
         this._connections = [];
+
+        for (let monitor of this._monitors)
+        {
+            monitor.destroy();
+        }
+        this._monitors = [];
 
         // destroy button
         if (this._button) this._button.destroy();

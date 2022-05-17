@@ -20,7 +20,7 @@ const ngettext = Domain.ngettext;
 var places = {
     OVERLAY: "OVERLAY",
     INDICATOR: "INDICATOR",
-    PANEL: "PANEL",
+    POPUP: "POPUP",
 };
 
 /**
@@ -70,6 +70,9 @@ var monitor = class Monitor extends GObject.Object
 
         /** The St.BoxLayout that is used to display this `Monitor` */
         this.box = null;
+        this.menuItem = null;
+        this.icon = null;
+        this.label = null;
     }
 
     async query(cancellable = null)
@@ -130,6 +133,24 @@ var monitor = class Monitor extends GObject.Object
         {
             this.box.destroy();
             this.box = null;
+        }
+
+        if (this.menuItem)
+        {
+            this.menuItem.destroy();
+            this.menuItem = null;
+        }
+
+        if (this.icon)
+        {
+            this.icon.destroy();
+            this.icon = null;
+        }
+
+        if (this.label)
+        {
+            this.label.destroy();
+            this.label = null;
         }
     }
 
