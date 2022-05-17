@@ -1,8 +1,22 @@
 # GNOME HUD <sup>WIP</sup>
 
-<img src="./images/screenshot.png" height="200px">
-
 [GNOME Shell](https://www.gnome.org/) extension for displaying system information like CPU usage, RAM usage, GPU usage, and FPS.
+
+**Under active initial development, everything subject to change.**
+
+**Screenshots**  
+<details>
+    <img src="./images/indicator-popup.png" height="200px">
+    <p>Indicator Popup Menu</p>
+    <img src="./images/overlay.png" height="200px">
+    <p>Example Overlay</p>
+    <img src="./images/preferences-1.png" height="200px">
+    <p>Preferences Window (General)</p>
+    <img src="./images/preferences-2.png" height="200px">
+    <p>Preferences Window (Styles)</p>
+    <img src="./images/preferences-3.png" height="200px">
+    <p>Preferences Window (Monitors)</p>
+</details>
 
 ## Installation
 
@@ -28,49 +42,24 @@ Use `Super` + `Alt` + `G` to toggle the overlay.
 
 ## Settings & Configuration
 
-Extension settings can be accessed through the indicator in the status area with the 'Settings' button. Alternatively, open the settings dialog manually with `gnome-extensions prefs gnomehud@ashtonn.com`.
-
-<details>
-    <summary>Default Configuration</summary>
-
-| Setting | Default | Type | Description |
-|---------|---------|------|-------------|
-| show-indicator | true | boolean | Show the top-panel indicator button |
-| show-overlay | true | boolean | Show the HUD overlay |
-| show-osd | true | boolean | Show toggle overlay alerts |
-| update-delay | 1000 | integer | Delay in milliseconds between overlay updates, 250-5000 |
-| anchor-corner | 1 | integer | Corner of the monitor to anchor the overlay to. 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right |
-| default-monitor | 0 | integer | Default monitor to display the overlay on. 0 = your primary monitor |
-| margin-v | 0.02 | double | Vertical margin in % of screen height |
-| margin-h | 0.02 | double | Horizontal margin in % of screen height |
-| overlay-h | 0.12 | double | Overlay height in % of screen height |
-| overlay-w | 0.12 | double | Overlay width in % of screen height |
-| background-color | "rgba(0, 0, 0)" | string | Background RGB color |
-| foreground-color | "rgba(255, 255, 255)" | string | Foreground RGB color |
-| background-opacity | 0.25 | double | Overlay background opacity, 0.00-1.00 |
-| foreground-opacity | 0.75 | double | Overlay foreground (font) opacity, 0.00-1.00 |
-| **Keybinds** |
-| kb-toggle-overlay | &lt;Super&gt;&lt;Alt&gt;g | keybind | Toggles overlay display (bound to show-overlay setting), special keys like &lt;Alt&gt; must be surrounded in &lt; &gt; |
-</details>
+Extension settings can be accessed through the indicator in the status area with the 'Settings' button. Alternatively, open the settings window manually with `gnome-extensions prefs gnomehud@ashtonn.com`.
 
 ## Development
 
 ### View logs
 
-*GNOME Shell*
+**GNOME Shell**  
+*GNOME shell, overlay, and indicator logs*
+
 ```
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
 
-*GJS*
+**GJS**  
+*Preferences window logs*
+
 ```
 journalctl -f -o cat /usr/bin/gjs
-```
-
-### Pack Extension
-
-```
-gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={*.js}
 ```
 
 ### Compile (Preferences) Schemas
@@ -84,3 +73,18 @@ glib-compile-schemas schemas/
 ```
 xgettext --from-code=UTF-8 --output=po/example.pot *.js
 ```
+
+### Pack Extension
+
+```
+gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={*.js}
+```
+
+### Useful Links
+
+| Name | Link |
+|------|------|
+| GJS Docs | https://gjs-docs.gnome.org/ |
+| GJS Guide | https://gjs.guide/extensions/ |
+| GNOME Shell Source | https://gitlab.gnome.org/GNOME/gnome-shell/-/tree/main/js/ui |
+| Icon Spec | https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html |
