@@ -71,7 +71,7 @@ glib-compile-schemas schemas/
 ### Generate Translations
 
 ```
-xgettext --from-code=UTF-8 --output=po/example.pot *.js
+xgettext --from-code=UTF-8 --output=po/example.pot *.js monitors/*.js
 ```
 
 ### Pack Extension
