@@ -652,8 +652,7 @@ function newGeneralPage()
     dangerGroup.add(uninstallBUtton);
 
     // info
-    const infoLabel = Gtk.Label.new(_(`Source: ${Me.metadata.url}`));
-    infoLabel.selectable = true;
+    const infoLabel = Gtk.LinkButton.new_with_label(Me.metadata.url, _(`Source`));
     dangerGroup.add(infoLabel);
 
     return page;
@@ -723,6 +722,21 @@ function newStylesPage()
     monitorRow.activatable_widget = monitorSelector;
     addResetButton(monitorRow, "default-monitor");
 
+    // vertical
+    const verticalRow = new Adw.ActionRow({ title: _("Horizontal/Vertical") });
+    verticalRow.set_tooltip_text(_("Toggle to the right to display vertically, or left to display horizontally"));
+    group.add(verticalRow);
+
+    verticalRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-horizontal-symbolic"));
+
+    const verticalSwitch = newSwitch("vertical");
+    verticalRow.add_suffix(verticalSwitch);
+    verticalRow.set_activatable_widget(verticalSwitch);
+
+    verticalRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-vertical-symbolic"));
+
+    addResetButton(verticalRow, "vertical");
+
     // margin
     const marginRow = new Adw.ActionRow({ title: _("Margin") });
     marginRow.set_tooltip_text(_("Margin (in pixels) between the screen edge and the overlay"));
@@ -748,35 +762,16 @@ function newStylesPage()
 
     paddingRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-horizontal-symbolic"));
 
-    const paddingHSpin = newSpinButton("padding-h", 0, 1000, 2);
+    const paddingHSpin = newSpinButton("padding-h", 0, 10000, 2);
     paddingRow.add_suffix(paddingHSpin);
     paddingRow.set_activatable_widget(paddingHSpin);
 
     paddingRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-vertical-symbolic"));
 
-    const paddingVSpin = newSpinButton("padding-v", 0, 1000, 2);
+    const paddingVSpin = newSpinButton("padding-v", 0, 10000, 2);
     paddingRow.add_suffix(paddingVSpin);
 
     addResetButton(paddingRow, ["padding-h", "padding-v"]);
-
-    // size
-    const sizeRow = new Adw.ActionRow({ title: _("Size") });
-    sizeRow.set_tooltip_text(_("Overlay width and height (in pixels)"));
-    group.add(sizeRow);
-
-    sizeRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-horizontal-symbolic"));
-
-    const width = newSpinButton("overlay-w", 0, 10000, 10);
-    sizeRow.add_suffix(width);
-    sizeRow.set_activatable_widget(width);
-
-    sizeRow.add_suffix(Gtk.Image.new_from_icon_name("object-flip-vertical-symbolic"));
-
-    const height = newSpinButton("overlay-h", 0, 10000, 10);
-    sizeRow.add_suffix(height);
-    sizeRow.set_activatable_widget(height);
-
-    addResetButton(sizeRow, ["overlay-w", "overlay-h"]);
 
     // background-color
     const backgroundRow = new Adw.ActionRow({ title: _("Background Color") });

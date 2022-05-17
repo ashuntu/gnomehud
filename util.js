@@ -54,7 +54,7 @@ var getCSSColor = (rgba, opacity) =>
  */
 var appendStyle = (widget, style) =>
 {
-    widget.set_style(`${widget.get_style()}; ${style};`);
+    widget.set_style(`${widget.get_style()} ${style}`);
 
     return widget;
 };

@@ -1,6 +1,6 @@
 "use strict";
 
-const { St, Gdk, GObject, Gio, GLib, Shell, Meta } = imports.gi;
+const { Clutter, St, Gdk, GObject, Gio, GLib, Shell, Meta } = imports.gi;
 
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
@@ -75,18 +75,17 @@ var overlay = class Overlay extends GObject.Object
             "changed::update-delay": this.delayChanged,
             "changed::anchor-corner": this.geometryChanged,
             "changed::default-monitor": this.geometryChanged,
+            "changed::vertical": this.geometryChanged,
             "changed::margin-h": this.geometryChanged,
             "changed::margin-v": this.geometryChanged,
-            "changed::padding-h": this.updateForeground,
-            "changed::padding-v": this.updateForeground,
-            "changed::overlay-w": this.geometryChanged,
-            "changed::overlay-h": this.geometryChanged,
-            "changed::background-opacity": this.updateBackground,
-            "changed::foreground-opacity": this.updateForeground,
-            "changed::background-color": this.updateBackground,
-            "changed::foreground-color": this.updateForeground,
-            "changed::border-radius": this.updateBackground,
-            "changed::font": this.updateForeground,
+            "changed::padding-h": this.geometryChanged,
+            "changed::padding-v": this.geometryChanged,
+            "changed::background-opacity": this.updateStyles,
+            "changed::foreground-opacity": this.updateStyles,
+            "changed::background-color": this.updateStyles,
+            "changed::foreground-color": this.updateStyles,
+            "changed::border-radius": this.updateStyles,
+            "changed::font": this.geometryChanged,
             "changed::monitors": this.updateMonitors,
         };
 
@@ -159,8 +158,7 @@ var overlay = class Overlay extends GObject.Object
             }
         });
 
-        this.updateGeometry();
-        this.updateForeground();
+        this.geometryChanged();
 
         // TODO start update loop
     }
@@ -197,19 +195,10 @@ var overlay = class Overlay extends GObject.Object
         {
             // Overlay container
             this.overlay = new St.BoxLayout();
-            this.overlay.set_vertical(true);
+            Main.uiGroup.add_actor(this.overlay);
 
             this.updateMonitors();
-
-            const geo = this.updateGeometry();
-            this.overlay.set_position(geo.x, geo.y);
-            this.overlay.set_size(geo.width, geo.height);
-            this.overlay.add_style_class_name("overlay");
-
-            this.updateBackground();
-            this.updateForeground();
-
-            Main.uiGroup.add_actor(this.overlay);
+            this.geometryChanged();
 
             this.update().catch(logError);
 
@@ -225,7 +214,7 @@ var overlay = class Overlay extends GObject.Object
         else
         {
             this._monitors.forEach((m) => m.destroy());
-            this._monitors = null;
+            this._monitors = [];
 
             if (this.overlay) this.overlay.destroy();
             this.overlay = null;
@@ -245,6 +234,10 @@ var overlay = class Overlay extends GObject.Object
      */
     async update()
     {
+        this.overlay.ensure_style();
+        this.overlay.queue_relayout();
+        this.overlay.queue_redraw();
+
         const updateStart = GLib.get_monotonic_time();
 
         const results = await Promise.all(
@@ -297,37 +290,84 @@ var overlay = class Overlay extends GObject.Object
     }
 
     /**
-     * Get the anchor coordinates and dimensions for the overlay.
-     * 
-     * @returns {Object} x, y, width, height object
+     * Called when a geometry setting like location or size is changed. Updates
+     * the overlay position.
+     */
+     geometryChanged()
+     {
+         this.updateStyles();
+         this.updateGeometry();
+     }
+
+    /**
+     * Update geometry-changing styles, locations, and sizes of overlay and monitors.
      */
     updateGeometry()
     {
+        const anchor = this._settings.get_int("anchor-corner");
         const mI = this._settings.get_int("default-monitor") - 1;
         this.monitor = Main.layoutManager.primaryMonitor;
         if (mI >= 0) this.monitor = Main.layoutManager.monitors[mI] ?? Main.layoutManager.primaryMonitor;
 
-        const anchor = this._settings.get_int("anchor-corner");
+        if (!this.overlay)
+        {
+            return;
+        }
+
+        // Monitor margins and padding
+        for (let i = 0; i < this._monitors.length; i++)
+        {
+            const monitor = this._monitors[i];
+
+            monitor.box.set_height(Number(this._settings.get_string("font").match(/\d+/g)[0]) * 2 + 10);
+
+            const paddingV = this._settings.get_int("padding-v");
+            const paddingH = this._settings.get_int("padding-h");
+
+            monitor.box.set_style("");
+
+            if (this._settings.get_boolean("vertical"))
+            {
+                Util.appendStyle(monitor.box, 
+                    `margin-left: ${paddingH}px;` +
+                    `margin-right: ${paddingH}px;`
+                );
+
+                if (i === 0)
+                {
+                    Util.appendStyle(monitor.box, `margin-top: ${paddingV}px;`);
+                }
+                else if (i === this._monitors.length - 1)
+                {
+                    Util.appendStyle(monitor.box, `margin-bottom: ${paddingV}px;`);
+                }
+            }
+            else
+            {
+                Util.appendStyle(monitor.box, 
+                    `margin-top: ${paddingV}px;` +
+                    `margin-bottom: ${paddingV}px;`
+                );
+
+                if (i === 0)
+                {
+                    Util.appendStyle(monitor.box, `margin-left: ${paddingH}px;`);
+                }
+                else if (i === this._monitors.length - 1)
+                {
+                    Util.appendStyle(monitor.box, `margin-right: ${paddingH}px;`);
+                }
+            }
+
+            monitor.box.ensure_style();
+        }
+
+        // Overlay dimensions and location
+        this.overlay.set_vertical(this._settings.get_boolean("vertical"));
         let x = this.monitor.x;
         let y = this.monitor.y;
-        let width = this._settings.get_int("overlay-w");
-        let height = this._settings.get_int("overlay-h");
-
-        let h = 0;
-        this._monitors.forEach((m) =>
-        {
-            h += m.box.get_children()[0].get_height();
-
-            let w = 0;
-            m.box.get_children().forEach((c) =>
-            {
-                w += c.get_width();
-            });
-
-            width = Math.max(width, w);
-        });
-
-        height = Math.max(height, h);
+        const height = this.overlay.get_height();
+        const width = this.overlay.get_width();
 
         // Left corners
         if (anchor % 2 == 0)
@@ -350,73 +390,42 @@ var overlay = class Overlay extends GObject.Object
             y += this.monitor.height - height - this._settings.get_int("margin-v");
         }
 
-        return { 
-            x: x,
-            y: y,
-            width: width,
-            height: height,
-        };
+        this.overlay.set_position(x, y);
+        //this.overlay.set_size(width, height);
     }
 
     /**
-     * Called when a geometry setting like location or size is changed. Updates
-     * the overlay position.
+     * Update non-geometry-changing styles like colors and fonts.
      */
-    geometryChanged()
-    {
-        const geo = this.updateGeometry();
-
-        if (this.overlay)
-        {
-            this.overlay.set_position(geo.x, geo.y);
-            this.overlay.set_size(geo.width, geo.height);
-        }
-    }
-
-    /**
-     * Called when background color is changed. Updates the background color and
-     * opacity.
-     */
-    updateBackground()
+    updateStyles()
     {
         if (this.overlay)
         {
-            const rgba = Util.stringToColor(this._settings.get_string("background-color"));
-            const str = Util.getCSSColor(rgba, this._settings.get_double("background-opacity"));
+            // Update parent box
+            const backgroundRGBA = Util.stringToColor(this._settings.get_string("background-color"));
+            const backgroundColor = Util.getCSSColor(backgroundRGBA, this._settings.get_double("background-opacity"));
+
             this.overlay.set_style(
-                `background-color: ${str}` +
+                `background-color: ${backgroundColor}` +
                 `border-radius: ${this._settings.get_string("border-radius")}`
             );
-        }
-    }
 
-    /**
-     * Called when foreground color is changed. Updates the foreground color and
-     * opacity.
-     */
-    updateForeground()
-    {
-        this._monitors.forEach((m) =>
-        {
-            const rgba = Util.stringToColor(m.config.color);
-            const str = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
-            const font = Util.fontToCSS(this._settings.get_string("font"));
-
-            m.box.set_height(Number(this._settings.get_string("font").match(/\d+/g)[0]) * 2);
-
-            m.box.set_style(
-                `margin-top: ${this._settings.get_int("padding-v")}px;` +
-                `margin-left: ${this._settings.get_int("padding-h")}px;`
-            );
-
-            m.box.get_children().forEach((label) =>
+            // Update monitor labels
+            for (let monitor of this._monitors)
             {
-                label.set_style(
-                    `color: ${str}` +
-                    `font: ${font}`
-                );
-            });
-        });
+                const rgba = Util.stringToColor(monitor.config.color);
+                const color = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
+                const font = Util.fontToCSS(this._settings.get_string("font"));
+
+                for (let label of monitor.box.get_children())
+                {
+                    label.set_style(
+                        `color: ${color}` +
+                        `font: ${font}`
+                    );
+                }
+            }
+        }
     }
 
     /**
