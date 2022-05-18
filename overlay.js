@@ -195,6 +195,9 @@ var overlay = class Overlay extends GObject.Object
         {
             // Overlay container
             this.overlay = new St.BoxLayout();
+            this.overlay.set_track_hover(true);
+            this.overlay.set_reactive(true);
+            this.overlay.connect("notify::hover", () => this.updateStyles());
             Main.uiGroup.add_actor(this.overlay);
 
             this.updateMonitors();
@@ -397,9 +400,17 @@ var overlay = class Overlay extends GObject.Object
     {
         if (this.overlay)
         {
+            const hoverMultiplier = this._settings.get_double("hover-multiplier");
+
             // Update parent box
+            let backgroundOpacity = this._settings.get_double("background-opacity");
+            if (hoverMultiplier && this.overlay.get_hover())
+            {
+                backgroundOpacity *= hoverMultiplier + 1;
+            }
+
             const backgroundRGBA = Util.stringToColor(this._settings.get_string("background-color"));
-            const backgroundColor = Util.getCSSColor(backgroundRGBA, this._settings.get_double("background-opacity"));
+            const backgroundColor = Util.getCSSColor(backgroundRGBA, backgroundOpacity);
 
             this.overlay.set_style(
                 `background-color: ${backgroundColor}` +
@@ -409,8 +420,14 @@ var overlay = class Overlay extends GObject.Object
             // Update monitor labels
             for (let monitor of this._monitors)
             {
+                let foregroundOpacity = this._settings.get_double("foreground-opacity");
+                if (hoverMultiplier && this.overlay.get_hover())
+                {
+                    foregroundOpacity *= hoverMultiplier + 1;
+                }
+
                 const rgba = Util.stringToColor(monitor.config.color);
-                const color = Util.getCSSColor(rgba, this._settings.get_double("foreground-opacity"));
+                const color = Util.getCSSColor(rgba, foregroundOpacity);
                 const font = Util.fontToCSS(this._settings.get_string("font"));
 
                 for (let label of monitor.box.get_children())

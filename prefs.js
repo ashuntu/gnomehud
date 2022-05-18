@@ -857,6 +857,35 @@ function newStylesPage()
         }
     );
 
+    // hover-multiplier
+    const hoverRow = new Adw.ActionRow({
+        title: _("Hover Opacity"),
+        subtitle: _("Negative values decrease opacity, positive values increase opacity")
+    })
+    hoverRow.set_tooltip_text(_("The multiplier to change the overlay opacity by when hovered over."));
+    group.add(hoverRow);
+
+    const hoverScale = Gtk.Scale.new_with_range(
+        Gtk.Orientation.HORIZONTAL,
+        -1.0,
+        1.0,
+        0.05
+    );
+    hoverScale.set_hexpand(true);
+    hoverScale.set_draw_value(true);
+    hoverScale.set_digits(2);
+
+    settings.bind(
+        "hover-multiplier",
+        hoverScale.get_adjustment(),
+        "value",
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
+    hoverRow.add_suffix(hoverScale);
+    hoverRow.set_activatable_widget(hoverScale);
+    addResetButton(hoverRow, "hover-multiplier");
+
     // border-radius
     const borderRow = new Adw.ActionRow({
         title: _("Border Radius"),
@@ -876,7 +905,7 @@ function newStylesPage()
         title: _("Font"),
         subtitle: _("Monospace fonts are highly recommended")
     });
-    fontRow.set_tooltip_text(_("The font to use for all overlay text."));
+    fontRow.set_tooltip_text(_("The font true use for all overlay text."));
     group.add(fontRow);
 
     const fontButton = Gtk.FontButton.new();

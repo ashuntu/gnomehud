@@ -51,6 +51,9 @@
         <key name="foreground-opacity" type="d">
             <default>0.75</default>
         </key>
+        <key name="hover-multiplier" type="d">
+            <default>0</default>
+        </key>
         <key name="border-radius" type="s">
             <default>"10px"</default>
         </key>
