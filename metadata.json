@@ -1,8 +1,8 @@
 {
-    "uuid": "gnomehud@ashtonn.com",
+    "uuid": "gnomehud@ashuntu.github.io",
     "name": "GNOME HUD",
     "description": "HUD overlay for GNOME-based desktops",
-    "url": "https://github.com/ashtoncano/gnomehud",
+    "url": "https://github.com/ashuntu/gnomehud",
     "settings-schema": "org.gnome.shell.extensions.gnomehud",
     "shell-version": [
         "42"

@@ -124,7 +124,7 @@ var query = async (cancellable = null, call = true) =>
     const updateEnd = GLib.get_monotonic_time();
     const diff = updateEnd - updateStart;
     _time += diff;
-    //log(`${diff}\t(avg. ${_time / ++_n})`);
+    log(`${diff}\t(avg. ${_time / ++_n})`);
 
     return results;
 }

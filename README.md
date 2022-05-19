@@ -23,16 +23,16 @@
 **Manual**
 
 1. Download or clone the repository to `~/.local/share/gnome-shell/extensions/`
-2. Rename the repository's folder to `gnomehud@ashtonn.com`
+2. Rename the repository's folder to `gnomehud@ashuntu.github.io`
 3. Restart the GNOME Shell with `Alt` + `F2`, `r`, then `Enter`. Alternatively, log out or restart the computer
-4. If the extension isn't already enabled, use `gnome-extensions enable gnomehud@ashtonn.com`
+4. If the extension isn't already enabled, use `gnome-extensions enable gnomehud@ashuntu.github.io`
 
 **Bundle**
 
 1. Download the `.zip` extension bundle
-2. Run `gnome-extensions install gnomehud@ashtonn.com.shell-extension.zip`
+2. Run `gnome-extensions install gnomehud@ashuntu.github.io.shell-extension.zip`
 3. Restart the GNOME Shell with `Alt` + `F2`, `r`, then `Enter`. Alternatively, log out or restart the computer
-4. If the extension isn't already enabled, use `gnome-extensions enable gnomehud@ashtonn.com`
+4. If the extension isn't already enabled, use `gnome-extensions enable gnomehud@ashuntu.github.io`
 
 *If the extension does not appear, make sure you have user extensions enabled with `gsettings set org.gnome.shell disable-user-extensions false`*
 
@@ -42,7 +42,7 @@ Use `Super` + `Alt` + `G` to toggle the overlay.
 
 ## Settings & Configuration
 
-Extension settings can be accessed through the indicator in the status area with the 'Settings' button. Alternatively, open the settings window manually with `gnome-extensions prefs gnomehud@ashtonn.com`.
+Extension settings can be accessed through the indicator in the status area with the 'Settings' button. Alternatively, open the settings window manually with `gnome-extensions prefs gnomehud@ashuntu.github.io`.
 
 ## Development
 
@@ -77,7 +77,7 @@ xgettext --from-code=UTF-8 --output=po/example.pot *.js monitors/*.js
 ### Pack Extension
 
 ```
-gnome-extensions pack gnomehud@ashtonn.com --podir=po --extra-source={*.js}
+gnome-extensions pack gnomehud@ashuntu.github.io --podir=po --extra-source={*.js}
 ```
 
 ### Useful Links
