@@ -12,25 +12,13 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const Util = Me.imports.util;
+const MonitorManager = Me.imports.monitors.monitorManager;
 const Monitor = Me.imports.monitors.monitor;
-const Battery = Me.imports.monitors.battery;
-const Memory = Me.imports.monitors.memory;
-const Processor = Me.imports.monitors.processor;
-const Network = Me.imports.monitors.network;
-const Disk = Me.imports.monitors.disk;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
-
-const monitorTypes = {
-    Processor: Processor.processor,
-    Memory: Memory.memory,
-    Battery: Battery.battery,
-    Network: Network.network,
-    Disk: Disk.disk,
-};
 
 var overlay = class Overlay extends GObject.Object
 {
@@ -42,24 +30,16 @@ var overlay = class Overlay extends GObject.Object
      * 
      * @param {Object} extension 
      */
-    constructor(extension)
+    constructor()
     {
         super();
 
-        this._extension = extension;
-        this._settings = extension.settings;
-        this._cancellable = extension.cancellable;
+        this._settings = ExtensionUtils.getSettings();
         this._connections = [];
-        this._monitors = [];
+        this._update = this.update.bind(this);
 
         this.overlay = null;
-    }
 
-    /**
-     * Create necessary bindings/objects for the Overlay to function.
-     */
-    create()
-    {
         Main.wm.addKeybinding(
             "kb-toggle-overlay",
             this._settings,
@@ -72,7 +52,6 @@ var overlay = class Overlay extends GObject.Object
 
         const settingsConnections = {
             "changed::show-overlay": this.toggle,
-            "changed::update-delay": this.delayChanged,
             "changed::anchor-corner": this.geometryChanged,
             "changed::default-monitor": this.geometryChanged,
             "changed::vertical": this.geometryChanged,
@@ -100,9 +79,6 @@ var overlay = class Overlay extends GObject.Object
         {
             this.toggle();
         }
-
-        this.time = 0;
-        this.n = 0;
     }
 
     /**
@@ -110,57 +86,37 @@ var overlay = class Overlay extends GObject.Object
      */
     updateMonitors()
     {
-        // TODO pause update loop
+        // pause updates for the overlay
+        MonitorManager.removeCallback(this._update);
 
-        // destroy old monitors
-        if (this._monitors)
+        for (let monitor of MonitorManager.monitors)
         {
-            this._monitors.forEach((m) =>
+            if (monitor.config.place.includes(Monitor.places.OVERLAY))
             {
-                m.destroy();
-            });
-        }
+                monitor.box = new St.BoxLayout();
+                monitor.box.set_vertical(false);
 
-        // Load monitors from settings
-        const m = this._settings.get_strv("monitors");
-        this._monitors = [];
-
-        // parse monitors from settings anew
-        m.forEach((mon) =>
-        {
-            const mObj = JSON.parse(mon);
-            const newMonitor = monitorTypes[mObj.type].newFromConfig(mObj);
-            
-            // We can ignore any monitors not being displayed on the overlay
-            if (newMonitor.config.place.includes(Monitor.places.OVERLAY))
-            {
-                this._monitors.push(newMonitor);
-
-                // create the box for the monitor
-                newMonitor.box = new St.BoxLayout();
-                newMonitor.box.set_vertical(false);
-
-                // create label
-                const label = new St.Label({ text: newMonitor.config.label });
-                newMonitor.box.add_child(label);
+                // monitor label
+                const label = new St.Label({ text: monitor.config.label });
                 label.set_width(100);
+                monitor.box.add_child(label);
 
-                // create format labels
-                newMonitor.config.format.forEach((f) =>
+                // add format labels
+                for (let format of monitor.config.format)
                 {
-                    const formatLabel = new St.Label();
-                    newMonitor.box.add_child(formatLabel);
+                    const formatLabel = new St.Label({ text: format.toLowerCase() });
                     formatLabel.set_width(200);
-                });
-                
-                // add the box to the parent box
-                if (this.overlay) this.overlay.add_child(newMonitor.box);
+                    monitor.box.add_child(formatLabel);
+                }
+
+                if (this.overlay) this.overlay.add_child(monitor.box);
             }
-        });
+        }
 
         this.geometryChanged();
 
-        // TODO start update loop
+        // start updates for the overlay
+        MonitorManager.addCallback(this._update);
     }
 
     /**
@@ -202,58 +158,33 @@ var overlay = class Overlay extends GObject.Object
 
             this.updateMonitors();
             this.geometryChanged();
-
-            this.update().catch(logError);
-
-            if (!this._eventLoop)
-            {
-                this._eventLoop = Mainloop.timeout_add(
-                    this._settings.get_int("update-delay"), 
-                    () => this.update().catch(logError)
-                );
-            }
         }
         // Hide the overlay
         else
         {
-            this._monitors.forEach((m) => m.destroy());
-            this._monitors = [];
+            MonitorManager.removeCallback(this._update);
 
             if (this.overlay) this.overlay.destroy();
             this.overlay = null;
-
-            if (this._eventLoop)
-            {
-                Mainloop.source_remove(this._eventLoop);
-                this._eventLoop = null;
-            }
         }
     }
 
     /**
      * Query the hardware for updates and update overlay labels.
-     * 
-     * @returns {boolean} true
      */
-    async update()
+    update(results)
     {
-        const updateStart = GLib.get_monotonic_time();
-
-        const results = await Promise.all(
-            this._monitors.map(m => m.query(this._cancellable))
-        );
-
         results.forEach((stats, i) =>
         {
-            const m = this._monitors[i];
-            m.box.get_children().forEach((child, i) =>
+            const monitor = MonitorManager.monitors[i];
+            monitor.box.get_children().forEach((child, j) =>
             {
-                if (i > 0)
+                if (j > 0) // ignore monitor label
                 {
-                    const val = stats[m.config.format[i - 1].toLowerCase()];
+                    const val = stats[monitor.config.format[j - 1].toLowerCase()];
                     if (typeof val === "number")
                     {
-                        child.set_text(`${val.toFixed(m.config.precision)}`);
+                        child.set_text(`${val.toFixed(monitor.config.precision)}`);
                     }
                     else
                     {
@@ -262,30 +193,6 @@ var overlay = class Overlay extends GObject.Object
                 }
             });
         });
-
-        const updateEnd = GLib.get_monotonic_time();
-        this.time += updateEnd - updateStart;
-        // log(this.time / ++this.n);
-
-        return true;
-    }
-
-    /**
-     * Called when the update-delay setting is changed and live updates the event
-     * loop delay to reflect the change.
-     */
-    delayChanged()
-    {
-        if (this._eventLoop && this._settings.get_boolean("show-overlay"))
-        {
-            Mainloop.source_remove(this._eventLoop);
-            this._eventLoop = null;
-        }
-
-        this._eventLoop = Mainloop.timeout_add(
-            this._settings.get_int("update-delay"), 
-            () => this.update()
-        );
     }
 
     /**
@@ -314,9 +221,9 @@ var overlay = class Overlay extends GObject.Object
         }
 
         // Monitor margins and padding
-        for (let i = 0; i < this._monitors.length; i++)
+        for (let i = 0; i < MonitorManager.monitors.length; i++)
         {
-            const monitor = this._monitors[i];
+            const monitor = MonitorManager.monitors[i];
 
             monitor.box.set_height(Number(this._settings.get_string("font").match(/\d+/g)[0]) * 2 + 10);
 
@@ -336,7 +243,7 @@ var overlay = class Overlay extends GObject.Object
                 {
                     Util.appendStyle(monitor.box, `margin-top: ${paddingV}px;`);
                 }
-                else if (i === this._monitors.length - 1)
+                else if (i === MonitorManager.monitors.length - 1)
                 {
                     Util.appendStyle(monitor.box, `margin-bottom: ${paddingV}px;`);
                 }
@@ -352,7 +259,7 @@ var overlay = class Overlay extends GObject.Object
                 {
                     Util.appendStyle(monitor.box, `margin-left: ${paddingH}px;`);
                 }
-                else if (i === this._monitors.length - 1)
+                else if (i === MonitorManager.monitors.length - 1)
                 {
                     Util.appendStyle(monitor.box, `margin-right: ${paddingH}px;`);
                 }
@@ -398,45 +305,48 @@ var overlay = class Overlay extends GObject.Object
      */
     updateStyles()
     {
-        if (this.overlay)
+        if (!this.overlay)
         {
-            const hoverMultiplier = this._settings.get_double("hover-multiplier");
+            return;
+        }
 
-            // Update parent box
-            let backgroundOpacity = this._settings.get_double("background-opacity");
-            if (hoverMultiplier && this.overlay.get_hover())
+        const hoverMultiplier = this._settings.get_double("hover-multiplier");
+        const hover = this.overlay.get_hover();
+
+        // Update parent box
+        let backgroundOpacity = this._settings.get_double("background-opacity");
+        if (hoverMultiplier && hover)
+        {
+            backgroundOpacity *= hoverMultiplier + 1;
+        }
+
+        const backgroundRGBA = Util.stringToColor(this._settings.get_string("background-color"));
+        const backgroundColor = Util.getCSSColor(backgroundRGBA, backgroundOpacity);
+
+        this.overlay.set_style(
+            `background-color: ${backgroundColor}` +
+            `border-radius: ${this._settings.get_string("border-radius")}`
+        );
+
+        // Update monitor labels
+        for (let monitor of MonitorManager.monitors)
+        {
+            let foregroundOpacity = this._settings.get_double("foreground-opacity");
+            if (hoverMultiplier && hover)
             {
-                backgroundOpacity *= hoverMultiplier + 1;
+                foregroundOpacity *= hoverMultiplier + 1;
             }
 
-            const backgroundRGBA = Util.stringToColor(this._settings.get_string("background-color"));
-            const backgroundColor = Util.getCSSColor(backgroundRGBA, backgroundOpacity);
+            const rgba = Util.stringToColor(monitor.config.color);
+            const color = Util.getCSSColor(rgba, foregroundOpacity);
+            const font = Util.fontToCSS(this._settings.get_string("font"));
 
-            this.overlay.set_style(
-                `background-color: ${backgroundColor}` +
-                `border-radius: ${this._settings.get_string("border-radius")}`
-            );
-
-            // Update monitor labels
-            for (let monitor of this._monitors)
+            for (let label of monitor.box.get_children())
             {
-                let foregroundOpacity = this._settings.get_double("foreground-opacity");
-                if (hoverMultiplier && this.overlay.get_hover())
-                {
-                    foregroundOpacity *= hoverMultiplier + 1;
-                }
-
-                const rgba = Util.stringToColor(monitor.config.color);
-                const color = Util.getCSSColor(rgba, foregroundOpacity);
-                const font = Util.fontToCSS(this._settings.get_string("font"));
-
-                for (let label of monitor.box.get_children())
-                {
-                    label.set_style(
-                        `color: ${color}` +
-                        `font: ${font}`
-                    );
-                }
+                label.set_style(
+                    `color: ${color}` +
+                    `font: ${font}`
+                );
             }
         }
     }
@@ -448,15 +358,10 @@ var overlay = class Overlay extends GObject.Object
     {
         Main.wm.removeKeybinding("kb-toggle-overlay");
 
+        MonitorManager.removeCallback(this._update);
+
         this._connections.forEach((c) => this._settings.disconnect(c));
-
-        Mainloop.source_remove(this._eventLoop);
-        this._eventLoop = null;
-
-        this._cancellable.cancel();
-
-        this._monitors.forEach((m) => m.destroy());
-        this._monitors = null;
+        this._connections = [];
 
         if (this.overlay) this.overlay.destroy();
         this.overlay = null;

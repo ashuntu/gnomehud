@@ -49,7 +49,7 @@ var monitor = class Monitor extends GObject.Object
     {
         super();
 
-        this.settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.gnomehud");
+        this.settings = ExtensionUtils.getSettings();
 
         this.stats = {
             updated: GLib.get_monotonic_time(),
@@ -129,29 +129,17 @@ var monitor = class Monitor extends GObject.Object
             delete this.binds[key];
         }
 
-        if (this.box)
-        {
-            this.box.destroy();
-            this.box = null;
-        }
+        if (this.box) this.box.destroy();
+        this.box = null;
 
-        if (this.menuItem)
-        {
-            this.menuItem.destroy();
-            this.menuItem = null;
-        }
+        if (this.menuItem) this.menuItem.destroy();
+        this.menuItem = null;
 
-        if (this.icon)
-        {
-            this.icon.destroy();
-            this.icon = null;
-        }
+        if (this.icon) this.icon.destroy();
+        this.icon = null;
 
-        if (this.label)
-        {
-            this.label.destroy();
-            this.label = null;
-        }
+        if (this.label) this.label.destroy();
+        this.label = null;
     }
 
     get config()

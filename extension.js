@@ -10,6 +10,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 
 const Indicator = Me.imports.indicator;
 const Overlay = Me.imports.overlay;
+const MonitorManager = Me.imports.monitors.monitorManager;
 
 const Gettext = imports.gettext;
 const Domain = Gettext.domain(Me.metadata.uuid);
@@ -32,15 +33,18 @@ class Extension
         this.settings = ExtensionUtils.getSettings();
         this.cancellable = new Gio.Cancellable();
 
-        this.indicator = new Indicator.indicator(this);
-        this.overlay = new Overlay.overlay(this);
-        this.indicator.create();
-        this.overlay.create();
+        MonitorManager.init();
+        MonitorManager.start(this.cancellable);
+
+        this.indicator = new Indicator.indicator();
+        this.overlay = new Overlay.overlay();
     }
 
     disable()
     {
         log(_(`${Me.metadata.uuid}: Disabling`));
+
+        MonitorManager.destroy();
 
         this.settings = null;
 
