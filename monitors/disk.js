@@ -21,7 +21,7 @@ Gio._promisify(Gio.File.prototype, "enumerate_children_async", "enumerate_childr
 /**
  * System monitor for disks like HDDs or SSDs.
  */
-var disk = class Disk extends Monitor.monitor
+var Disk = class Disk extends Monitor.Monitor
 {
     static { GObject.registerClass(this); }
 

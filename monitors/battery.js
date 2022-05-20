@@ -25,7 +25,7 @@ Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish"
 /**
  * System monitor for battery devices.
  */
-var battery = class Battery extends Monitor.monitor
+var Battery = class Battery extends Monitor.Monitor
 {
     static { GObject.registerClass(this); }
 

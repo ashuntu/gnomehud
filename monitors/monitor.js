@@ -26,7 +26,7 @@ var places = {
 /**
  * Represents a system hardware monitor.
  */
-var monitor = class Monitor extends GObject.Object
+var Monitor = class Monitor extends GObject.Object
 {
     static 
     { 

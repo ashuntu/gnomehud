@@ -20,7 +20,7 @@ Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish"
 /**
  * System monitor for network devices.
  */
-var network = class Network extends Monitor.monitor
+var Network = class Network extends Monitor.Monitor
 {
     static { GObject.registerClass(this); }
 

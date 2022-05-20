@@ -309,7 +309,7 @@ class ProcessorMonitorGroup extends MonitorGroup
 
     constructor(processor = null)
     {
-        super(processor = processor ?? new Processor.processor());
+        super(processor = processor ?? new Processor.Processor());
         
         this.processor = processor;
         this.addPrefix();
@@ -341,7 +341,7 @@ class MemoryMonitorGroup extends MonitorGroup
 
     constructor(memory = null)
     {
-        super(memory = memory ?? new Memory.memory());
+        super(memory = memory ?? new Memory.Memory());
         
         this.memory = memory;
         this.addPrefix();
@@ -369,7 +369,7 @@ class BatteryMonitorGroup extends MonitorGroup
 
     constructor(battery = null)
     {
-        super(battery = battery ?? new Battery.battery());
+        super(battery = battery ?? new Battery.Battery());
         
         this.battery = battery;
         this.addPrefix();
@@ -397,7 +397,7 @@ class NetworkMonitorGroup extends MonitorGroup
 
     constructor(network = null)
     {
-        super(network = network ?? new Network.network());
+        super(network = network ?? new Network.Network());
         
         this.network = network;
         this.addPrefix();
@@ -458,7 +458,7 @@ class DiskMonitorGroup extends MonitorGroup
 
     constructor(disk = null)
     {
-        super(disk = disk ?? new Disk.disk());
+        super(disk = disk ?? new Disk.Disk());
         
         this.disk = disk;
         this.addPrefix();
@@ -506,11 +506,11 @@ class DiskMonitorGroup extends MonitorGroup
 }
 
 const monitorTypes = {
-    Processor: Processor.processor,
-    Memory: Memory.memory,
-    Battery: Battery.battery,
-    Network: Network.network,
-    Disk: Disk.disk,
+    Processor: Processor.Processor,
+    Memory: Memory.Memory,
+    Battery: Battery.Battery,
+    Network: Network.Network,
+    Disk: Disk.Disk,
 };
 
 const groupTypes = {

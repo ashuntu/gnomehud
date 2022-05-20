@@ -21,7 +21,7 @@ const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
-var indicator = class Indicator extends GObject.Object
+var Indicator = class Indicator extends GObject.Object
 {
     static { GObject.registerClass(this); }
 

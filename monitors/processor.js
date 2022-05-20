@@ -20,7 +20,7 @@ Gio._promisify(Gio.File.prototype, "enumerate_children_async", "enumerate_childr
 /**
  * System monitor for processors like CPUs.
  */
-var processor = class Processor extends Monitor.monitor
+var Processor = class Processor extends Monitor.Monitor
 {
     static { GObject.registerClass(this); }
 

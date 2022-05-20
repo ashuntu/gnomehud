@@ -1,6 +1,6 @@
 "use strict";
 
-const { Gdk } = imports.gi;
+const { Gdk, Gio, GLib, GObject } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -135,4 +135,74 @@ var fontToCSS = (font) =>
     }
 
     return css.concat(font).trim();
+}
+
+/**
+ * Gio.Cancellable which can be cancelled independently of its parent, and cancelling
+ * the parent will cancel its children.
+ * 
+ * Reference:
+ * https://github.com/micheleg/dash-to-dock/blob/ubuntu-dock/utils.js#L543-L596
+ * 
+ * @param {Gio.Cancellable} parent 
+ */
+var CancellableChild = class CancellableChild extends Gio.Cancellable
+{
+    static { GObject.registerClass(this); }
+
+    constructor(parent)
+    {
+        if (parent && !(parent instanceof Gio.Cancellable))
+        {
+            throw TypeError("Parent not of type Gio.Cancellable");
+        }
+
+        super();
+
+        if (parent.is_cancelled())
+        {
+            this.cancel();
+            return;
+        }
+
+        this.parent = parent;
+        this._connectToParent();
+    }
+
+    _connectToParent()
+    {
+        this.connection = this.parent.connect(() =>
+        {
+            this._cancel();
+
+            if (this._disconnection)
+            {
+                return;
+            }
+
+            this._disconnection = GLib.idle_add(GLib.PRIORITY_DEFAULT, () =>
+            {
+                this._disconnectFromParent();
+                this._disconnection = null;
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+    }
+
+    _disconnectFromParent()
+    {
+        if (this.connection) this.parent.disconnect(this.connection);
+        this.connection = null;
+    }
+
+    _cancel()
+    {
+        super.cancel();
+    }
+
+    cancel()
+    {
+        this._disconnectFromParent();
+        this._cancel();
+    }
 }

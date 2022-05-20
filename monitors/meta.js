@@ -14,7 +14,7 @@ const ngettext = Domain.ngettext;
 
 const ByteArray = imports.byteArray;
 
-var meta = class Meta extends Monitor.monitor
+var Meta = class Meta extends Monitor.Monitor
 {
     static { GObject.registerClass(this); }
 

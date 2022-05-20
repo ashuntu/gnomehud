@@ -20,7 +20,7 @@ const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
-var overlay = class Overlay extends GObject.Object
+var Overlay = class Overlay extends GObject.Object
 {
     static { GObject.registerClass(this); }
 

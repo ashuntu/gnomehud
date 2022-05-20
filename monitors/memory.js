@@ -18,7 +18,7 @@ Gio._promisify(Gio.File.prototype, "load_contents_async", "load_contents_finish"
 /**
  * System monitor for memory devices like RAM.
  */
-var memory = class Memory extends Monitor.monitor
+var Memory = class Memory extends Monitor.Monitor
 {
     static { GObject.registerClass(this); }
 

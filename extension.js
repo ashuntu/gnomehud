@@ -8,6 +8,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const ExtensionManager = Main.extensionManager;
 const Me = ExtensionUtils.getCurrentExtension();
 
+const Util = Me.imports.util;
 const Indicator = Me.imports.indicator;
 const Overlay = Me.imports.overlay;
 const MonitorManager = Me.imports.monitors.monitorManager;
@@ -36,14 +37,15 @@ class Extension
         MonitorManager.init();
         MonitorManager.start(this.cancellable);
 
-        this.indicator = new Indicator.indicator();
-        this.overlay = new Overlay.overlay();
+        this.indicator = new Indicator.Indicator();
+        this.overlay = new Overlay.Overlay();
     }
 
     disable()
     {
         log(_(`${Me.metadata.uuid}: Disabling`));
 
+        this.cancellable.cancel();
         MonitorManager.destroy();
 
         this.settings = null;

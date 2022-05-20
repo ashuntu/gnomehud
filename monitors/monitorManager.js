@@ -37,11 +37,11 @@ let _n = 0;
  * Dict of `Monitor` names to their types.
  */
 var types = {
-    Processor: Processor.processor,
-    Memory: Memory.memory,
-    Battery: Battery.battery,
-    Network: Network.network,
-    Disk: Disk.disk,
+    Processor: Processor.Processor,
+    Memory: Memory.Memory,
+    Battery: Battery.Battery,
+    Network: Network.Network,
+    Disk: Disk.Disk,
 };
 
 /**
@@ -94,6 +94,8 @@ var load = () =>
  */
 var destroy = () =>
 {
+    stop();
+
     _connections.forEach(c => _settings.disconnect(c));
     _connections = [];
 
@@ -140,7 +142,7 @@ var start = (cancellable = null) =>
     {
         _loop = Mainloop.timeout_add(
             _settings.get_int("update-delay"),
-            () => query().catch(logError)
+            () => query(cancellable).catch(logError)
         );
     }
     else
