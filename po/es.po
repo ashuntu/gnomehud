@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-12 16:36-0500\n"
-"PO-Revision-Date: 2022-05-06 05:17-0500\n"
-"Last-Translator: \n"
+"POT-Creation-Date: 2022-05-17 13:38-0500\n"
+"PO-Revision-Date: 2022-05-22 18:00-0500\n"
+"Last-Translator: Adolfo Jayme Barrientos <fitojb@ubuntu.com>\n"
 "Language-Team: \n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
@@ -18,94 +18,274 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.0.1\n"
 
-#: indicator.js:70
+#: indicator.js:71
 msgid "Overlay"
 msgstr "Superposición"
 
-#: indicator.js:92 prefs.js:31
+#: indicator.js:85
+msgid "Open System Monitor"
+msgstr "Abrir Monitor del sistema"
+
+#: indicator.js:93
 msgid "Settings"
 msgstr "Configuración"
 
-#: indicator.js:97
-msgid "Disable"
-msgstr "Desactivar"
+#: indicator.js:98 prefs.js:643
+msgid "Disable Extension"
+msgstr "Desactivar extensión"
 
-#: overlay.js:122
-msgid "RAM 0.00%"
-msgstr "RAM 0,00 %"
+#: prefs.js:86
+msgid "Place"
+msgstr "Lugar"
 
-#: overlay.js:128
-msgid "CPU 0.00%"
-msgstr "CPU 0,00 %"
+#: prefs.js:87
+msgid "The area where this monitor will be shown."
+msgstr "El área donde se mostrará este monitor."
 
-#: prefs.js:35
+#: prefs.js:107
+msgid "Label"
+msgstr "Etiqueta"
+
+#: prefs.js:108
+msgid "The label that may prefix this monitor."
+msgstr "La etiqueta que puede prefijar este monitor."
+
+#: prefs.js:119 prefs.js:675
+msgid "Icon"
+msgstr "Icono"
+
+#: prefs.js:120
+msgid "The icon that may prefix this monitor."
+msgstr "El icono que puede prefijar este monitor."
+
+#: prefs.js:136
+msgid "Color"
+msgstr "Color"
+
+#: prefs.js:137
+msgid "The color of the text for this monitor."
+msgstr "El color del texto de este monitor."
+
+#: prefs.js:153
+msgid "Number Precision"
+msgstr "Precisión numérica"
+
+#: prefs.js:154
+msgid "The number of decimal places to show (0-10)."
+msgstr "El número de decimales que se mostrarán (0-10)."
+
+#: prefs.js:165
+msgid "Display Formats"
+msgstr "Formatos de visualización"
+
+#: prefs.js:166
+msgid "The display formats/data types to show."
+msgstr "Los formatos de visualización/tipos de datos que se mostrarán."
+
+#: prefs.js:171
+msgid "Formats are displayed left-to-right or top-to-bottom when applicable"
+msgstr "Los formatos se muestran de izquierda a derecha o de arriba a abajo cuando corresponda"
+
+#: prefs.js:202
+msgid "Move monitor down."
+msgstr "Bajar monitor."
+
+#: prefs.js:212
+msgid "Move monitor up."
+msgstr "Subir monitor."
+
+#: prefs.js:325
+msgid "Stat File"
+msgstr "Archivo stat"
+
+#: prefs.js:326
+msgid "File path cooresponding to the /proc/stat processor information."
+msgstr "Ruta de archivo que responde a la información del procesador en /proc/stat."
+
+#: prefs.js:357
+msgid "Memory File"
+msgstr "Archivo de memoria"
+
+#: prefs.js:385
+msgid "Battery File"
+msgstr "Archivo de batería"
+
+#: prefs.js:413
+msgid "Network Device"
+msgstr "Dispositivo de red"
+
+#: prefs.js:439 prefs.js:500
+msgid "/proc File"
+msgstr "Archivo /proc"
+
+#: prefs.js:446
+msgid "/sys Directory"
+msgstr "Directorio /sys"
+
+#: prefs.js:474 monitors/disk.js:28
+msgid "Disk"
+msgstr "Disco"
+
+#: prefs.js:555
+msgid "General"
+msgstr "Generales"
+
+#: prefs.js:563
 msgid "Show Extension Indicator"
 msgstr "Mostrar indicador de extensión"
 
-#: prefs.js:59
+#: prefs.js:576
 msgid "Show Overlay"
 msgstr "Mostrar superposición"
 
-#: prefs.js:79
+#: prefs.js:586
 msgid "Show Toggle Alerts"
 msgstr "Mostrar alertas de alternancia"
 
-#: prefs.js:99
-msgid "Update Delay (ms)"
-msgstr "Demora de actualización (ms)"
+#: prefs.js:596
+msgid "Update Interval (ms)"
+msgstr "Intervalo de actualización (ms)"
 
-#: prefs.js:118
-msgid "Anchor Corner"
-msgstr "Esquina de anclaje"
-
-#: prefs.js:122
-msgid "Top-Left"
-msgstr "Esquina superior izquierda"
-
-#: prefs.js:123
-msgid "Top-Right"
-msgstr "Esquina superior derecha"
-
-#: prefs.js:124
-msgid "Bottom-Left"
-msgstr "Esquina inferior izquierda"
-
-#: prefs.js:125
-msgid "Bottom-Right"
-msgstr "Esquina inferior derecha"
-
-#: prefs.js:140
-msgid "Default Monitor"
-msgstr "Monitor predeterminado"
-
-#: prefs.js:144
-msgid "Primary"
-msgstr "Principal"
-
-#: prefs.js:159
-msgid "Background Color"
-msgstr "Color de fondo"
-
-#: prefs.js:202
-msgid "Foreground Color"
-msgstr "Color de primer plano"
-
-#: prefs.js:245
+#: prefs.js:615
 msgid "Keybinds"
 msgstr "Enlaces de teclas"
 
-#: prefs.js:248
+#: prefs.js:618
 msgid "Toggle Overlay"
 msgstr "Alternar superposición"
 
-#: prefs.js:263
+#: prefs.js:633
 msgid "Danger Zone!"
 msgstr "¡Zona peligrosa!"
 
-#: prefs.js:267
+#: prefs.js:637
 msgid "Reset Settings"
 msgstr "Restablecer configuración"
 
-#: prefs.js:273
-msgid "Disable Extension"
-msgstr "Desactivar extensión"
+#: prefs.js:649
+msgid "Uninstall Extension"
+msgstr "Desinstalar extensión"
+
+#: prefs.js:655
+msgid "Source"
+msgstr "Origen"
+
+#: prefs.js:668
+msgid "Styles"
+msgstr "Estilos"
+
+#: prefs.js:676
+msgid "Icon to display in the top panel"
+msgstr "Icono que mostrar en el panel superior"
+
+#: prefs.js:685
+msgid "Anchor Corner"
+msgstr "Esquina de anclaje"
+
+#: prefs.js:689
+msgid "Top-Left"
+msgstr "Esquina superior izquierda"
+
+#: prefs.js:690
+msgid "Top-Right"
+msgstr "Esquina superior derecha"
+
+#: prefs.js:691
+msgid "Bottom-Left"
+msgstr "Esquina inferior izquierda"
+
+#: prefs.js:692
+msgid "Bottom-Right"
+msgstr "Esquina inferior derecha"
+
+#: prefs.js:707
+msgid "Default Display"
+msgstr "Pantalla predeterminada"
+
+#: prefs.js:711
+msgid "Primary"
+msgstr "Principal"
+
+#: prefs.js:726
+msgid "Horizontal/Vertical"
+msgstr "Horizontal/vertical"
+
+#: prefs.js:727
+msgid "Toggle to the right to display vertically, or left to display horizontally"
+msgstr "Alternar hacia la derecha para mostrar verticalmente o hacia la izquierda para mostrar horizontalmente"
+
+#: prefs.js:741
+msgid "Margin"
+msgstr "Margen"
+
+#: prefs.js:742
+msgid "Margin (in pixels) between the screen edge and the overlay"
+msgstr "Margen (en píxeles) entre la orilla de la pantalla y la superposición"
+
+#: prefs.js:759
+msgid "Padding"
+msgstr "Espaciado interior"
+
+#: prefs.js:760
+msgid "Space between text and the edge of the overlay (in pixels)"
+msgstr "Espacio entre el texto y la orilla de la superposición (en píxeles)"
+
+#: prefs.js:777
+msgid "Background Color"
+msgstr "Color de fondo"
+
+#: prefs.js:818
+msgid "Foreground Color"
+msgstr "Color de primer plano"
+
+#: prefs.js:862
+msgid "Border Radius"
+msgstr "Radio de esquina"
+
+#: prefs.js:863
+msgid "See: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius"
+msgstr "Vea: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius"
+
+#: prefs.js:865
+msgid "Overlay border radius (corner radius)."
+msgstr "Tamaño de redondeado de las esquinas de la superposición."
+
+#: prefs.js:876
+msgid "Font"
+msgstr "Tipo de letra"
+
+#: prefs.js:877
+msgid "Monospace fonts are highly recommended"
+msgstr "Los tipos de letra de anchura fija son muy recomendables"
+
+#: prefs.js:879
+msgid "The font to use for all overlay text."
+msgstr "El tipo de letra que se utilizará en el texto de la superposición."
+
+#: prefs.js:906
+msgid "Monitors"
+msgstr "Monitores"
+
+#: prefs.js:914
+msgid "Select"
+msgstr "Seleccionar"
+
+#: monitors/battery.js:32
+msgid "Battery"
+msgstr "Batería"
+
+#: monitors/memory.js:25
+msgid "Memory"
+msgstr "Memoria"
+
+#: monitors/meta.js:21
+msgid "Meta"
+msgstr "Meta"
+
+#: monitors/network.js:27
+msgid "Network"
+msgstr "Red"
+
+#: monitors/processor.js:27
+msgid "Processor"
+msgstr "Procesador"
